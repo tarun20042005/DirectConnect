@@ -12,6 +12,11 @@ interface AuthRequest extends Express.Request {
   user?: User;
 }
 
+function stripPassword(user: User) {
+  const { password: _, ...safeUser } = user;
+  return safeUser;
+}
+
 function authenticateToken(req: any, res: any, next: any) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -59,14 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
 
       res.json({
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        phone: user.phone,
-        avatarUrl: user.avatarUrl,
-        verified: user.verified,
-        createdAt: user.createdAt,
+        ...stripPassword(user),
         token
       });
     } catch (error: any) {
@@ -91,14 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
 
       res.json({
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        phone: user.phone,
-        avatarUrl: user.avatarUrl,
-        verified: user.verified,
-        createdAt: user.createdAt,
+        ...stripPassword(user),
         token
       });
     } catch (error: any) {
@@ -272,71 +263,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Client connected to WebSocket');
     let currentUserId: string | null = null;
     let currentPropertyId: string | null = null;
+    let authenticated = false;
 
     ws.on('message', async (data: string) => {
       try {
         const message = JSON.parse(data.toString());
 
         if (message.type === 'join') {
-          currentUserId = message.userId;
-          currentPropertyId = message.propertyId;
-          const roomId = `${message.propertyId}`;
-          
-          if (!chatRooms.has(roomId)) {
-            chatRooms.set(roomId, new Set());
+          if (!message.token) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Authentication required' }));
+            ws.close();
+            return;
           }
-          chatRooms.get(roomId)!.add({ ws, userId: message.userId });
 
-          const property = await storage.getProperty(message.propertyId);
-          if (property) {
-            let chat = await storage.getChatByPropertyAndTenant(message.propertyId, message.userId);
-            if (!chat) {
-              chat = await storage.createChat({
-                propertyId: message.propertyId,
-                tenantId: message.userId,
-                ownerId: property.ownerId,
-              });
+          try {
+            const payload = jwt.verify(message.token, JWT_SECRET) as any;
+            const user = await storage.getUser(payload.userId);
+            
+            if (!user) {
+              ws.send(JSON.stringify({ type: 'error', message: 'User not found' }));
+              ws.close();
+              return;
             }
+
+            currentUserId = user.id;
+            currentPropertyId = message.propertyId;
+            authenticated = true;
+
+            const property = await storage.getProperty(message.propertyId);
+            if (!property) {
+              ws.send(JSON.stringify({ type: 'error', message: 'Property not found' }));
+              ws.close();
+              return;
+            }
+
+            const isOwner = currentUserId === property.ownerId;
+            
+            let chat: Chat | undefined;
+            let tenantId: string;
+
+            if (isOwner) {
+              if (!message.chatId) {
+                ws.send(JSON.stringify({ type: 'error', message: 'Chat ID required for owner' }));
+                ws.close();
+                return;
+              }
+              
+              chat = await storage.getChat(message.chatId);
+              if (!chat || chat.ownerId !== currentUserId || chat.propertyId !== message.propertyId) {
+                ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized chat access' }));
+                ws.close();
+                return;
+              }
+              
+              tenantId = chat.tenantId;
+            } else {
+              tenantId = currentUserId;
+              chat = await storage.getChatByPropertyAndTenant(message.propertyId, tenantId);
+              
+              if (!chat) {
+                chat = await storage.createChat({
+                  propertyId: message.propertyId,
+                  tenantId: tenantId,
+                  ownerId: property.ownerId,
+                });
+              }
+            }
+
+            const roomId = `${message.propertyId}-${tenantId}`;
+            
+            if (!chatRooms.has(roomId)) {
+              chatRooms.set(roomId, new Set());
+            }
+            chatRooms.get(roomId)!.add({ ws, userId: currentUserId });
 
             const messages = await storage.getMessages(chat.id);
             if (ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({ type: 'history', messages }));
+              ws.send(JSON.stringify({ type: 'history', messages, chatId: chat.id }));
             }
+          } catch (err) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Invalid token' }));
+            ws.close();
+            return;
           }
         } else if (message.type === 'message') {
-          const property = await storage.getProperty(message.propertyId);
-          if (property) {
-            const senderId = message.senderId;
-            const isTenant = senderId !== property.ownerId;
-            
-            let chat = await storage.getChatByPropertyAndTenant(
-              message.propertyId,
-              isTenant ? senderId : message.recipientId || senderId
-            );
-            
-            if (!chat) {
-              chat = await storage.createChat({
-                propertyId: message.propertyId,
-                tenantId: isTenant ? senderId : message.recipientId || senderId,
-                ownerId: property.ownerId,
-              });
-            }
+          if (!authenticated || !currentUserId || !currentPropertyId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Not authenticated' }));
+            return;
+          }
 
-            const savedMessage = await storage.createMessage({
-              chatId: chat.id,
-              senderId: message.senderId,
-              content: message.content,
+          if (!message.chatId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Chat ID required' }));
+            return;
+          }
+
+          const chat = await storage.getChat(message.chatId);
+          if (!chat) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Chat not found' }));
+            return;
+          }
+
+          if (chat.tenantId !== currentUserId && chat.ownerId !== currentUserId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }));
+            return;
+          }
+
+          const savedMessage = await storage.createMessage({
+            chatId: chat.id,
+            senderId: currentUserId,
+            content: message.content,
+          });
+
+          const roomId = `${chat.propertyId}-${chat.tenantId}`;
+          const room = chatRooms.get(roomId);
+          if (room) {
+            room.forEach((client) => {
+              if (client.ws.readyState === WebSocket.OPEN) {
+                client.ws.send(JSON.stringify({ type: 'message', message: savedMessage }));
+              }
             });
-
-            const roomId = `${message.propertyId}`;
-            const room = chatRooms.get(roomId);
-            if (room) {
-              room.forEach((client) => {
-                if (client.ws.readyState === WebSocket.OPEN) {
-                  client.ws.send(JSON.stringify({ type: 'message', message: savedMessage }));
-                }
-              });
-            }
           }
         }
       } catch (error) {

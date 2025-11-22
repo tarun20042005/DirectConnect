@@ -10,10 +10,10 @@ async function throwIfResNotOk(res: Response) {
 
 function getAuthHeaders(): HeadersInit {
   const user = getAuthUser();
-  const headers: HeadersInit = { "Content-Type": "application/json" };
+  const headers: HeadersInit = {};
   
-  if (user && (user as any).token) {
-    headers["Authorization"] = `Bearer ${(user as any).token}`;
+  if (user && user.token) {
+    headers["Authorization"] = `Bearer ${user.token}`;
   }
   
   return headers;
@@ -24,9 +24,15 @@ export async function apiRequest<T = any>(
   url: string,
   data?: unknown | undefined,
 ): Promise<T> {
+  const headers = getAuthHeaders();
+  
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? getAuthHeaders() : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });

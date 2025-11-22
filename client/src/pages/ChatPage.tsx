@@ -20,6 +20,7 @@ export default function ChatPage() {
   const user = getAuthUser();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -44,8 +45,14 @@ export default function ChatPage() {
 
     socket.onopen = () => {
       console.log("WebSocket connected");
-      if (propertyId) {
-        socket.send(JSON.stringify({ type: "join", propertyId, userId: user.id }));
+      if (propertyId && user.token) {
+        socket.send(JSON.stringify({ 
+          type: "join", 
+          propertyId, 
+          userId: user.id,
+          token: user.token,
+          chatId: chatId 
+        }));
       }
     };
 
@@ -55,6 +62,11 @@ export default function ChatPage() {
         setMessages((prev) => [...prev, data.message]);
       } else if (data.type === "history") {
         setMessages(data.messages || []);
+        if (data.chatId) {
+          setChatId(data.chatId);
+        }
+      } else if (data.type === "error") {
+        toast({ title: "Chat error", description: data.message, variant: "destructive" });
       }
     };
 
@@ -68,7 +80,7 @@ export default function ChatPage() {
     return () => {
       socket.close();
     };
-  }, [propertyId, user.id]);
+  }, [propertyId, user.id, user.token, chatId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -78,14 +90,12 @@ export default function ChatPage() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    if (!message.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !chatId) return;
 
     const newMessage = {
       type: "message",
-      propertyId,
-      senderId: user.id,
+      chatId,
       content: message.trim(),
-      timestamp: new Date().toISOString(),
     };
 
     wsRef.current.send(JSON.stringify(newMessage));
