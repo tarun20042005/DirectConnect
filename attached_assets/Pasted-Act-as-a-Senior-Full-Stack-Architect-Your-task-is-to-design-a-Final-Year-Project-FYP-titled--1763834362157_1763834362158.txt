@@ -1,0 +1,50 @@
+Act as a Senior Full-Stack Architect. Your task is to design a **Final Year Project (FYP)** titled **"DirectConnect Rentals: Broker-Free Housing Platform"**. The entire development process will be executed within the **Visual Studio Code (VS Code) environment**, utilizing its native tools and integrated terminals for a seamless workflow.
+
+The goal is to create a feature-rich, full-stack web application (and scalable app architecture) that directly connects house owners and student/individual tenants, completely bypassing traditional real estate brokers.
+
+***
+
+### 1. Technology Stack & Deliverables (Mandatory for VS Code Development)
+1.  **Full-Stack:** **MERN Stack** (MongoDB, Express.js, React, Node.js). This is ideal for VS Code's robust JavaScript/TypeScript support.
+2.  **Database:** MongoDB (NoSQL).
+3.  **Frontend:** React (with a state management library like Redux Toolkit/Context API).
+4.  **Backend:** Node.js (Express.js). Include a robust RESTful API design.
+5.  **Deployment:** Suggest a deployment strategy optimized for the MERN stack (e.g., Vercel/Netlify for Frontend, Render/AWS EC2 for Backend).
+6.  **Development Setup:** Mention essential VS Code extensions that would streamline development (e.g., ESLint, Prettier, MongoDB extensions).
+
+### 2. Core User Roles
+* **Tenant/Searcher:** Students or individuals looking for rentals.
+* **Owner/Lister:** Individuals or small agencies who own properties and want to list them.
+
+### 3. Advanced Feature Breakdown (Crucial for an Excellent Grade)
+
+* **A. Geospatial & Search Features:**
+    * **Interactive Map:** Use the Google Maps API or Leaflet.js to show all available listings on a map.
+    * **Polygon Search:** Allow users to **draw a boundary** on the map to filter listings only within that custom area.
+    * **Proximity Search:** Search by distance (radius) from a specific **Point of Interest (POI)** like a university or landmark, using MongoDB's GeoSpatial Queries ($geoNear).
+
+* **B. Communication & Negotiation:**
+    * **Real-Time Chat:** Implement a **WebSocket-based** (e.g., Socket.IO) in-app chat system for immediate, direct communication between the Owner and Tenant.
+    * **Viewing Scheduler:** An integrated **calendar/booking system** where tenants can request a viewing time and owners can confirm or reschedule.
+
+* **C. Listing Quality & Trust:**
+    * **Image Optimization:** Implement dynamic image uploading (e.g., using Cloudinary or AWS S3) with secure storage and size optimization.
+    * **Virtual Tours:** Support embedding links or uploading **360-degree virtual tour/video** content to listings.
+    * **User Verification:** Implement a system for **Owner verification** (e.g., email/phone OTP, or simulated ID check) to build tenant trust.
+    * **Review and Rating System:** Allow tenants to review properties and owners after a successful interaction/stay.
+
+* **D. Authentication & Security:**
+    * **JWT Authentication:** Secure user sessions using JSON Web Tokens (JWT).
+    * **OAuth Integration:** Allow login via Google or social media.
+
+***
+
+### 4. Required Output Format
+
+Provide a detailed response organized into the following sections:
+
+1.  **Project Abstract & MVP Definition**
+2.  **Recommended VS Code Setup & Extensions** (Crucial development environment tools).
+3.  **MERN Stack Database Schema (Conceptual)** (Key MongoDB collections and their core fields, focusing on geospatial indexing).
+4.  **API Endpoint Design (Top 5)**
+5.  **Technical Challenges & Solutions**
