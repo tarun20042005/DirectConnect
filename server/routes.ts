@@ -267,6 +267,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/payments/deposit", authenticateToken, async (req, res) => {
+    try {
+      const { propertyId, amount } = req.body;
+      
+      if (!propertyId || !amount) {
+        return res.status(400).json({ message: "Property ID and amount are required" });
+      }
+
+      const payment = await storage.createPayment({
+        tenantId: req.user.id,
+        propertyId,
+        amount: parseFloat(amount),
+        currency: "INR",
+        type: "deposit",
+        description: `Deposit for property ${propertyId}`,
+        status: "completed",
+      });
+
+      res.json(payment);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
 
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });

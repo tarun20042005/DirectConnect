@@ -16,18 +16,21 @@ interface PropertyMapProps {
   onPropertyClick?: (property: Property) => void;
   center?: [number, number];
   zoom?: number;
+  showUserLocation?: boolean;
 }
 
 export function PropertyMap({
   properties,
   selectedProperty,
   onPropertyClick,
-  center = [40.7128, -74.0060],
-  zoom = 12,
+  center = [12.9716, 77.5946],
+  zoom = 11,
+  showUserLocation = true,
 }: PropertyMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const userMarkerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -41,11 +44,40 @@ export function PropertyMap({
 
     mapRef.current = map;
 
+    // Request user geolocation if enabled
+    if (showUserLocation && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          if (mapRef.current && userMarkerRef.current === null) {
+            const userIcon = L.divIcon({
+              className: "user-location-marker",
+              html: `
+                <div class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg" style="transform: translate(-50%, -50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
+                  📍
+                </div>
+              `,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            });
+            userMarkerRef.current = L.marker([latitude, longitude], { icon: userIcon })
+              .addTo(mapRef.current)
+              .bindPopup("Your Location");
+            mapRef.current.setView([latitude, longitude], zoom);
+          }
+        },
+        (error) => {
+          console.log("Geolocation not available:", error.message);
+        }
+      );
+    }
+
     return () => {
       map.remove();
       mapRef.current = null;
+      userMarkerRef.current = null;
     };
-  }, []);
+  }, [center, zoom, showUserLocation]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -63,11 +95,11 @@ export function PropertyMap({
         className: "custom-marker",
         html: `
           <div class="bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold shadow-lg whitespace-nowrap" style="transform: translate(-50%, -100%);">
-            $${property.price}/mo
+            ₹${(parseInt(property.price) || 0).toLocaleString('en-IN')}/mo
           </div>
         `,
-        iconSize: [60, 30],
-        iconAnchor: [30, 30],
+        iconSize: [80, 30],
+        iconAnchor: [40, 30],
       });
 
       const marker = L.marker([lat, lng], { icon: priceIcon })
