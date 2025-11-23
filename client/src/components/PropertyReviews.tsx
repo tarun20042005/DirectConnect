@@ -20,7 +20,7 @@ export function PropertyReviews({ propertyId }: PropertyReviewsProps) {
   const user = getAuthUser();
 
   const { data: reviews, isLoading } = useQuery<Review[]>({
-    queryKey: ["/api/reviews", propertyId],
+    queryKey: ["/api/properties", propertyId, "reviews"],
   });
 
   const createReviewMutation = useMutation({
@@ -32,7 +32,7 @@ export function PropertyReviews({ propertyId }: PropertyReviewsProps) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/reviews", propertyId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/properties", propertyId, "reviews"] });
       setComment("");
       setRating(5);
     },
@@ -142,7 +142,7 @@ export function PropertyReviews({ propertyId }: PropertyReviewsProps) {
                       </div>
                       {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
                       <p className="text-xs text-muted-foreground mt-2">
-                        {new Date(review.createdAt).toLocaleDateString("en-IN")}
+                        {review.createdAt ? new Date(review.createdAt).toLocaleDateString("en-IN") : "Recently"}
                       </p>
                     </div>
                   </div>

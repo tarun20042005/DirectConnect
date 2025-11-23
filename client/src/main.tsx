@@ -2,25 +2,29 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Suppress Vite HMR WebSocket errors in Replit environment IMMEDIATELY
+// CRITICAL: Suppress Vite HMR WebSocket errors BEFORE anything else runs
 if (typeof window !== 'undefined') {
-  // Set up error suppression at the very first opportunity
-  const suppressViteHmrErrors = (event: Event) => {
-    const reason = (event as any)?.reason;
-    const message = reason?.message || String(reason);
-    if (message?.includes('WebSocket') && (message?.includes('undefined') || message?.includes('invalid'))) {
-      event.preventDefault();
-      return;
+  // Override console.error to silently catch Vite HMR errors
+  const originalError = console.error;
+  console.error = function(...args: any[]) {
+    const errorStr = String(args[0] || '');
+    if (errorStr.includes('WebSocket') && (errorStr.includes('undefined') || errorStr.includes('localhost:undefined'))) {
+      return; // Silently ignore Vite HMR errors
     }
+    originalError.apply(console, args);
   };
 
-  // Capture phase handler - runs first
-  window.addEventListener('unhandledrejection', suppressViteHmrErrors, true);
+  // Suppress unhandledrejection events
+  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    const msg = event.reason?.message || String(event.reason);
+    if (String(msg).includes('WebSocket') && (String(msg).includes('undefined') || String(msg).includes('invalid'))) {
+      event.preventDefault();
+    }
+  }, true);
   
-  // Regular error handler as backup
-  window.addEventListener('error', (event) => {
-    const msg = event?.message || '';
-    if (msg.includes('WebSocket') && msg.includes('invalid')) {
+  // Suppress error events
+  window.addEventListener('error', (event: ErrorEvent) => {
+    if (String(event.message).includes('WebSocket') && String(event.message).includes('invalid')) {
       event.preventDefault();
     }
   }, true);
