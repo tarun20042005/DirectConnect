@@ -14,6 +14,7 @@ import { Home, User as UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveAuthUser } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { isValidIndianPhone, formatIndianPhone } from "@/lib/phone";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -24,7 +25,10 @@ const signupSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.string().optional(),
+  phone: z.string().refine(
+    (phone) => !phone || isValidIndianPhone(phone),
+    "Please enter a valid 10-digit Indian phone number"
+  ).optional(),
   role: z.enum(["tenant", "owner"]),
 });
 
@@ -76,7 +80,12 @@ export default function AuthPage() {
   const handleSignup = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest<any>("POST", "/api/auth/signup", data);
+      // Format phone number to standard Indian format
+      const formattedData = {
+        ...data,
+        phone: data.phone ? formatIndianPhone(data.phone) : undefined,
+      };
+      const response = await apiRequest<any>("POST", "/api/auth/signup", formattedData);
       saveAuthUser(response);
       toast({ title: "Welcome!", description: "Your account has been created successfully." });
       setLocation("/dashboard");
@@ -229,15 +238,16 @@ export default function AuthPage() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone (Optional)</FormLabel>
+                        <FormLabel>Phone Number (Optional)</FormLabel>
                         <FormControl>
                           <Input
                             type="tel"
-                            placeholder="+1 (555) 000-0000"
+                            placeholder="+91 98765 43210"
                             data-testid="input-signup-phone"
                             {...field}
                           />
                         </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">Enter 10-digit Indian phone number</p>
                         <FormMessage />
                       </FormItem>
                     )}

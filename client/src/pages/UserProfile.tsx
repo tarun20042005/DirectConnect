@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, MapPin, Home, ArrowLeft, ShieldCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { formatIndianPhone } from "@/lib/phone";
 import type { User, Property } from "@shared/schema";
 
 type UserProfile = User;
@@ -134,7 +135,7 @@ export default function UserProfile() {
                         <Phone className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="text-muted-foreground">Phone</p>
-                          <p className="font-medium" data-testid="text-phone">{user.phone}</p>
+                          <p className="font-medium" data-testid="text-phone">{formatIndianPhone(user.phone)}</p>
                         </div>
                       </div>
                     )}
