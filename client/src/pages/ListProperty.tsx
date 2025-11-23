@@ -426,8 +426,51 @@ export default function ListProperty() {
               )}
 
               {currentStep === 3 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold">Amenities</h3>
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold">Property Images</h3>
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed border-muted-foreground rounded-lg p-6 text-center cursor-pointer hover:border-primary transition">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                        data-testid="input-image-upload"
+                      />
+                      <label htmlFor="image-upload" className="cursor-pointer block">
+                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="font-semibold">Click to upload property images</p>
+                        <p className="text-sm text-muted-foreground">PNG, JPG, GIF up to 10MB each</p>
+                      </label>
+                    </div>
+
+                    {uploadedImages.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {uploadedImages.map((img, idx) => (
+                          <div key={idx} className="relative group">
+                            <img
+                              src={img}
+                              alt={`Property ${idx + 1}`}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="absolute top-1 right-1 bg-destructive text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
+                              data-testid={`button-remove-image-${idx}`}
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h3 className="text-xl font-semibold">Amenities</h3>
 
                   <FormField
                     control={form.control}
@@ -469,6 +512,7 @@ export default function ListProperty() {
                       </FormItem>
                     )}
                   />
+                  </div>
                 </div>
               )}
 
@@ -483,8 +527,9 @@ export default function ListProperty() {
                     <p><strong>Title:</strong> {form.watch("title")}</p>
                     <p><strong>Type:</strong> {form.watch("propertyType")}</p>
                     <p><strong>Location:</strong> {form.watch("city")}, {form.watch("state")}</p>
-                    <p><strong>Rent:</strong> ${form.watch("price")}/month</p>
+                    <p><strong>Rent:</strong> ₹{form.watch("price")}/month</p>
                     <p><strong>Bedrooms:</strong> {form.watch("bedrooms")} | <strong>Bathrooms:</strong> {form.watch("bathrooms")}</p>
+                    <p><strong>Images:</strong> {uploadedImages.length} uploaded</p>
                     {form.watch("amenities") && form.watch("amenities").length > 0 && (
                       <p><strong>Amenities:</strong> {form.watch("amenities").join(", ")}</p>
                     )}

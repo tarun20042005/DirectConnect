@@ -45,9 +45,9 @@ export default function HomePage() {
     {
       id: "1",
       image: livingRoomImage,
-      title: "Modern Downtown Apartment",
-      price: "1,800",
-      location: "New York, NY",
+      title: "Modern Apartment in Bangalore",
+      price: "50,000",
+      location: "Bangalore, Karnataka",
       bedrooms: 2,
       bathrooms: 2,
       verified: true
@@ -55,9 +55,9 @@ export default function HomePage() {
     {
       id: "2",
       image: kitchenImage,
-      title: "Luxury Condo with City View",
-      price: "2,500",
-      location: "San Francisco, CA",
+      title: "Luxury 3BHK in Mumbai",
+      price: "85,000",
+      location: "Mumbai, Maharashtra",
       bedrooms: 3,
       bathrooms: 2,
       verified: true
@@ -65,9 +65,9 @@ export default function HomePage() {
     {
       id: "3",
       image: bedroomImage,
-      title: "Cozy Studio Near Campus",
-      price: "1,200",
-      location: "Boston, MA",
+      title: "Cozy Studio in Delhi",
+      price: "35,000",
+      location: "Delhi",
       bedrooms: 1,
       bathrooms: 1,
       verified: false
@@ -86,10 +86,10 @@ export default function HomePage() {
       >
         <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6">
-            Find Your Perfect Home
+            Find Your Perfect Home in India
           </h1>
           <p className="text-lg md:text-xl text-white/90 mb-8 md:mb-12 max-w-2xl mx-auto">
-            Browse thousands of verified rentals and connect directly with owners - no broker fees
+            Browse verified properties across India and connect directly with owners - no broker fees, no hidden charges
           </p>
 
           <Card className="max-w-3xl mx-auto backdrop-blur-md bg-background/95 shadow-xl">
@@ -99,7 +99,7 @@ export default function HomePage() {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="City, neighborhood, or address"
+                    placeholder="Search cities - Mumbai, Bangalore, Delhi, Pune..."
                     value={searchLocation}
                     onChange={(e) => setSearchLocation(e.target.value)}
                     className="pl-10"

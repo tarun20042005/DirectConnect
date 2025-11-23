@@ -53,8 +53,8 @@ export default function SearchResults() {
           data-testid="slider-price-range"
         />
         <div className="flex justify-between text-sm text-muted-foreground">
-          <span>${priceRange[0]}</span>
-          <span>${priceRange[1]}</span>
+          <span>₹{priceRange[0].toLocaleString('en-IN')}</span>
+          <span>₹{priceRange[1].toLocaleString('en-IN')}</span>
         </div>
       </div>
 
@@ -131,7 +131,6 @@ export default function SearchResults() {
     if (price < priceRange[0] || price > priceRange[1]) return false;
     if (bedrooms && bedrooms !== "any" && property.bedrooms < parseInt(bedrooms)) return false;
     if (bathrooms && bathrooms !== "any" && property.bathrooms < parseInt(bathrooms)) return false;
-    if (verifiedOnly && !property.verified) return false;
     if (selectedAmenities.length > 0) {
       const hasAllAmenities = selectedAmenities.every(a => 
         property.amenities?.includes(a)
@@ -152,7 +151,7 @@ export default function SearchResults() {
         <div className="flex-1 flex flex-col">
           <div className="border-b bg-background p-4">
             <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="outline" className="lg:hidden" data-testid="button-filters">
