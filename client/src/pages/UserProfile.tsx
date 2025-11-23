@@ -1,195 +1,199 @@
-import { useState } from "react";
+import { useParams, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Mail, Phone, MapPin, Home, ArrowLeft, ShieldCheck, Calendar } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { OTPVerification } from "@/components/OTPVerification";
+import { formatIndianPhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Phone, ShieldCheck } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import type { User, Property } from "@shared/schema";
 
-const otpSendSchema = z.object({
-  phone: z.string().regex(/^\+91\s\d{5}\s\d{5}$/, "Enter valid Indian phone number"),
-});
+function UserProfilePage() {
+  const { userId } = useParams<{ userId: string }>();
+  const [, setLocation] = useLocation();
 
-const otpVerifySchema = z.object({
-  code: z.string().length(6, "OTP must be 6 digits"),
-});
-
-type OTPSendForm = z.infer<typeof otpSendSchema>;
-type OTPVerifyForm = z.infer<typeof otpVerifySchema>;
-
-interface OTPVerificationProps {
-  onVerified?: () => void;
-  phone?: string;
-}
-
-export function OTPVerification({ onVerified, phone }: OTPVerificationProps) {
-  const { toast } = useToast();
-  const [step, setStep] = useState<"phone" | "verify">("phone");
-  const [isLoading, setIsLoading] = useState(false);
-  const [userPhone, setUserPhone] = useState(phone || "");
-  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
-
-  const sendForm = useForm<OTPSendForm>({
-    resolver: zodResolver(otpSendSchema),
-    defaultValues: { phone: phone || "" },
+  const { data: user, isLoading: userLoading } = useQuery<User>({
+    queryKey: ["/api/users", userId],
+    enabled: !!userId,
   });
 
-  const verifyForm = useForm<OTPVerifyForm>({
-    resolver: zodResolver(otpVerifySchema),
-    defaultValues: { code: "" },
+  const { data: properties, isLoading: propsLoading } = useQuery<Property[]>({
+    queryKey: ["/api/properties/owner", userId],
+    enabled: !!userId,
   });
 
-  const handleSendOTP = async (data: OTPSendForm) => {
-    setIsLoading(true);
-    try {
-      const response: any = await apiRequest("POST", "/api/otp/send", {
-        phone: data.phone,
-      });
-      setUserPhone(data.phone);
-      setOtpExpiry(new Date(response.expiresAt));
-      setStep("verify");
-      toast({
-        title: "OTP Sent",
-        description: `Verification code sent to ${data.phone}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send OTP",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (userLoading) {
+    return (
+      <div className="container py-8">
+        <Button variant="ghost" onClick={() => setLocation(-1)}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <Skeleton className="h-48 mt-8" />
+      </div>
+    );
+  }
 
-  const handleVerifyOTP = async (data: OTPVerifyForm) => {
-    setIsLoading(true);
-    try {
-      await apiRequest("POST", "/api/otp/verify", {
-        code: data.code,
-      });
-      toast({
-        title: "Success!",
-        description: "Your phone number has been verified",
-      });
-      verifyForm.reset();
-      setStep("phone");
-      onVerified?.();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Invalid OTP",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!user) {
+    return (
+      <div className="container py-8 text-center">
+        <p className="text-muted-foreground">User not found</p>
+        <Button onClick={() => setLocation("/")} className="mt-4">
+          Return Home
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-green-600" />
-          Verify Phone Number
-        </CardTitle>
-        <CardDescription>
-          Secure your account with phone verification
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {step === "phone" ? (
-          <Form {...sendForm}>
-            <form onSubmit={sendForm.handleSubmit(handleSendOTP)} className="space-y-4">
-              <FormField
-                control={sendForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <div className="flex gap-2">
-                        <Phone className="h-10 w-10 text-muted-foreground flex-shrink-0" />
-                        <Input
-                          placeholder="+91 98765 43210"
-                          {...field}
-                          data-testid="input-otp-phone"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+    <div className="container py-8 max-w-4xl">
+      <Button
+        variant="ghost"
+        onClick={() => setLocation(-1)}
+        data-testid="button-back"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+
+      <div className="mt-8 space-y-8">
+        {/* User Info */}
+        <Card className="p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <h1 className="text-3xl font-bold" data-testid="text-username">
+                  {user.fullName}
+                </h1>
+                {user.verified && <VerificationBadge />}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  <span data-testid="text-email">{user.email}</span>
+                </div>
+
+                {user.phone && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span data-testid="text-phone">
+                      {formatIndianPhone(user.phone)}
+                    </span>
+                  </div>
                 )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-                data-testid="button-send-otp"
-              >
-                {isLoading ? "Sending..." : "Send OTP"}
-              </Button>
-            </form>
-          </Form>
-        ) : (
-          <Form {...verifyForm}>
-            <form onSubmit={verifyForm.handleSubmit(handleVerifyOTP)} className="space-y-4">
-              <div className="text-sm text-muted-foreground mb-4">
-                Enter the 6-digit code sent to {userPhone}
-                {otpExpiry && (
-                  <div className="text-xs mt-1">
-                    Expires at {otpExpiry.toLocaleTimeString()}
+
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Home className="h-4 w-4" />
+                  <span className="capitalize" data-testid="text-role">
+                    {user.role === "owner" ? "Property Owner" : "Tenant"}
+                  </span>
+                </div>
+
+                {user.createdAt && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span data-testid="text-member-since">
+                      Member since {new Date(user.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </Card>
 
-              <FormField
-                control={verifyForm.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Verification Code</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="000000"
-                        maxLength={6}
-                        {...field}
-                        data-testid="input-otp-code"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+        {/* Verification Status */}
+        <Card className="p-6">
+          <h2 className="font-semibold mb-4 text-lg">Verification Status</h2>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+              <div
+                className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  user.verified
+                    ? "bg-green-100 dark:bg-green-950"
+                    : "bg-yellow-100 dark:bg-yellow-950"
+                }`}
+              >
+                {user.verified ? (
+                  <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
+                ) : (
+                  <MapPin className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 )}
-              />
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setStep("phone")}
-                  data-testid="button-back-to-phone"
-                >
-                  Back
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1"
-                  disabled={isLoading}
-                  data-testid="button-verify-otp"
-                >
-                  {isLoading ? "Verifying..." : "Verify"}
-                </Button>
               </div>
-            </form>
-          </Form>
+              <div>
+                <p
+                  className="font-semibold"
+                  data-testid="text-verification-status"
+                >
+                  {user.verified ? "Phone Verified" : "Pending Verification"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {user.verified
+                    ? "Your phone number has been verified"
+                    : "Verify your phone number to increase account security"}
+                </p>
+              </div>
+            </div>
+
+            {!user.verified && user.phone && (
+              <div className="mt-4">
+                <OTPVerification
+                  phone={user.phone}
+                  onVerified={() => {
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Properties (if owner) */}
+        {user.role === "owner" && (
+          <Card className="p-6">
+            <h2 className="font-semibold mb-4 text-lg flex items-center gap-2">
+              <Home className="h-5 w-5" />
+              Listed Properties ({properties?.length || 0})
+            </h2>
+            {propsLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+              </div>
+            ) : properties && properties.length > 0 ? (
+              <div className="grid gap-4">
+                {properties.map((property) => (
+                  <div
+                    key={property.id}
+                    className="p-4 border rounded-lg hover-elevate cursor-pointer"
+                    onClick={() => setLocation(`/properties/${property.id}`)}
+                    data-testid={`card-property-${property.id}`}
+                  >
+                    <h3 className="font-semibold" data-testid="text-property-title">
+                      {property.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {property.bedrooms} bed • {property.bathrooms} bath •{" "}
+                      {property.city}
+                    </p>
+                    <p className="text-sm font-semibold text-primary mt-2">
+                      ₹{Number(property.price).toLocaleString("en-IN")}/month
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">
+                No properties listed yet
+              </p>
+            )}
+          </Card>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
+
+export default UserProfilePage;

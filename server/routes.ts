@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
-import { storage } from "./storage";
+import { DatabaseStorage } from "./storage-db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { User, Chat } from "@shared/schema";
@@ -37,6 +37,8 @@ function authenticateToken(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const storage = new DatabaseStorage();
+
   app.post("/api/auth/signup", async (req, res) => {
     try {
       const { email, password, fullName, phone, role } = req.body;
