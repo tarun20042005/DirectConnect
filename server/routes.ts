@@ -106,6 +106,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Must come BEFORE /:id route to avoid matching "owner" as an ID
+  app.get("/api/properties/owner/:ownerId", async (req, res) => {
+    try {
+      const properties = await storage.getPropertiesByOwner(req.params.ownerId);
+      res.json(properties);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/properties/:id", async (req, res) => {
     try {
       const property = await storage.getProperty(req.params.id);
@@ -116,15 +126,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.incrementPropertyViews(req.params.id);
 
       res.json(property);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.get("/api/properties/owner/:ownerId", async (req, res) => {
-    try {
-      const properties = await storage.getPropertiesByOwner(req.params.ownerId);
-      res.json(properties);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

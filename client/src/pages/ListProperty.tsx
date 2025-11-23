@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { getAuthUser, isOwner } from "@/lib/auth";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
 import { Image as ImageIcon, X } from "lucide-react";
 import livingRoomImage from "@assets/generated_images/living_room_property_listing.png";
@@ -120,6 +120,11 @@ export default function ListProperty() {
       };
 
       await apiRequest<Property>("POST", "/api/properties", propertyData);
+      
+      // Invalidate property queries to refresh listings
+      await queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/properties/owner", user.id] });
+      
       toast({ title: "Success!", description: "Your property has been listed." });
       setLocation("/dashboard");
     } catch (error: any) {
