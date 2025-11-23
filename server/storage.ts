@@ -265,4 +265,20 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Use database storage if DATABASE_URL is set, otherwise fall back to in-memory
+let storage: IStorage;
+
+if (process.env.DATABASE_URL) {
+  try {
+    const { DatabaseStorage } = await import("./storage-db");
+    storage = new DatabaseStorage();
+    console.log("Using database storage");
+  } catch (e) {
+    console.log("Database not available, falling back to memory storage");
+    storage = new MemStorage();
+  }
+} else {
+  storage = new MemStorage();
+}
+
+export { storage };

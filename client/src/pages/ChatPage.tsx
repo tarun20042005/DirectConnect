@@ -39,13 +39,17 @@ export default function ChatPage() {
   });
 
   useEffect(() => {
+    if (!propertyId || !user.token) return;
+    
+    const host = window.location.host || 'localhost:5000';
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const socket = new WebSocket(wsUrl);
+    const wsUrl = `${protocol}//${host}/ws`;
+    
+    try {
+      const socket = new WebSocket(wsUrl);
 
-    socket.onopen = () => {
-      console.log("WebSocket connected");
-      if (propertyId && user.token) {
+      socket.onopen = () => {
+        console.log("WebSocket connected");
         socket.send(JSON.stringify({ 
           type: "join", 
           propertyId, 
@@ -53,8 +57,7 @@ export default function ChatPage() {
           token: user.token,
           chatId: chatId 
         }));
-      }
-    };
+      };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -70,16 +73,20 @@ export default function ChatPage() {
       }
     };
 
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      toast({ title: "Connection error", description: "Failed to connect to chat", variant: "destructive" });
-    };
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        toast({ title: "Connection error", description: "Failed to connect to chat", variant: "destructive" });
+      };
 
-    wsRef.current = socket;
+      wsRef.current = socket;
 
-    return () => {
-      socket.close();
-    };
+      return () => {
+        socket.close();
+      };
+    } catch (error) {
+      console.error("WebSocket setup error:", error);
+      toast({ title: "Connection error", description: "Failed to setup WebSocket", variant: "destructive" });
+    }
   }, [propertyId, user.id, user.token, chatId]);
 
   useEffect(() => {
