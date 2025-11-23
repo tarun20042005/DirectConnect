@@ -1,253 +1,195 @@
-import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Mail, Phone, MapPin, Home, ArrowLeft, ShieldCheck } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { VerificationBadge } from "@/components/VerificationBadge";
-import { formatIndianPhone } from "@/lib/phone";
-import type { User, Property } from "@shared/schema";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Phone, ShieldCheck } from "lucide-react";
 
-type UserProfile = User;
-type PropertyListing = Property;
+const otpSendSchema = z.object({
+  phone: z.string().regex(/^\+91\s\d{5}\s\d{5}$/, "Enter valid Indian phone number"),
+});
 
-export default function UserProfile() {
-  const { userId } = useParams<{ userId: string }>();
-  const [, setLocation] = useLocation();
+const otpVerifySchema = z.object({
+  code: z.string().length(6, "OTP must be 6 digits"),
+});
 
-  const { data: user, isLoading: userLoading } = useQuery<UserProfile>({
-    queryKey: ["/api/users", userId],
+type OTPSendForm = z.infer<typeof otpSendSchema>;
+type OTPVerifyForm = z.infer<typeof otpVerifySchema>;
+
+interface OTPVerificationProps {
+  onVerified?: () => void;
+  phone?: string;
+}
+
+export function OTPVerification({ onVerified, phone }: OTPVerificationProps) {
+  const { toast } = useToast();
+  const [step, setStep] = useState<"phone" | "verify">("phone");
+  const [isLoading, setIsLoading] = useState(false);
+  const [userPhone, setUserPhone] = useState(phone || "");
+  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
+
+  const sendForm = useForm<OTPSendForm>({
+    resolver: zodResolver(otpSendSchema),
+    defaultValues: { phone: phone || "" },
   });
 
-  const { data: properties, isLoading: propertiesLoading } = useQuery<PropertyListing[]>({
-    queryKey: ["/api/properties/owner", userId],
-    enabled: !!userId && user?.role === "owner",
+  const verifyForm = useForm<OTPVerifyForm>({
+    resolver: zodResolver(otpVerifySchema),
+    defaultValues: { code: "" },
   });
 
-  if (userLoading) {
-    return (
-      <div className="container mx-auto px-4 md:px-6 py-8">
-        <Skeleton className="h-8 w-32 mb-6" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Skeleton className="h-96 w-full" />
-          </div>
-          <Skeleton className="h-96" />
-        </div>
-      </div>
-    );
-  }
+  const handleSendOTP = async (data: OTPSendForm) => {
+    setIsLoading(true);
+    try {
+      const response: any = await apiRequest("POST", "/api/otp/send", {
+        phone: data.phone,
+      });
+      setUserPhone(data.phone);
+      setOtpExpiry(new Date(response.expiresAt));
+      setStep("verify");
+      toast({
+        title: "OTP Sent",
+        description: `Verification code sent to ${data.phone}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send OTP",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 md:px-6 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">User not found</h1>
-        <Button onClick={() => setLocation("/search")}>Back to Search</Button>
-      </div>
-    );
-  }
-
-  const userInitials = user.fullName
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase() || "U";
-
-  const isOwner = user.role === "owner";
+  const handleVerifyOTP = async (data: OTPVerifyForm) => {
+    setIsLoading(true);
+    try {
+      await apiRequest("POST", "/api/otp/verify", {
+        code: data.code,
+      });
+      toast({
+        title: "Success!",
+        description: "Your phone number has been verified",
+      });
+      verifyForm.reset();
+      setStep("phone");
+      onVerified?.();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Invalid OTP",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-4xl">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.history.back()}
-          className="mb-6"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Profile Card */}
-          <div className="lg:col-span-2">
-            <Card className="overflow-hidden">
-              <CardHeader className="pb-4">
-                <div className="flex items-start gap-6">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={user.avatarUrl || ""} alt={user.fullName} />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h1 className="text-3xl font-bold" data-testid="text-username">
-                        {user.fullName}
-                      </h1>
-                      <VerificationBadge verified={user.verified ?? false} />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <Badge variant="outline" data-testid="badge-role">
-                        {isOwner ? "Property Owner" : "Tenant"}
-                      </Badge>
-                      {user.verified && (
-                        <Badge variant="secondary" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                          <ShieldCheck className="h-3 w-3 mr-1" />
-                          ID Verified
-                        </Badge>
-                      )}
-                    </div>
-
-                    <p className="text-sm text-muted-foreground">
-                      Member since {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }) : "Recently"}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <Separator />
-
-              <CardContent className="pt-6 space-y-6">
-                {/* Contact Information */}
-                <div>
-                  <h2 className="font-semibold mb-4 text-lg">Contact Information</h2>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-muted-foreground">Email</p>
-                        <p className="font-medium" data-testid="text-email">{user.email}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-green-600" />
+          Verify Phone Number
+        </CardTitle>
+        <CardDescription>
+          Secure your account with phone verification
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {step === "phone" ? (
+          <Form {...sendForm}>
+            <form onSubmit={sendForm.handleSubmit(handleSendOTP)} className="space-y-4">
+              <FormField
+                control={sendForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <Phone className="h-10 w-10 text-muted-foreground flex-shrink-0" />
+                        <Input
+                          placeholder="+91 98765 43210"
+                          {...field}
+                          data-testid="input-otp-phone"
+                        />
                       </div>
-                    </div>
-
-                    {user.phone && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-muted-foreground">Phone</p>
-                          <p className="font-medium" data-testid="text-phone">{formatIndianPhone(user.phone)}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Verification Status */}
-                <div>
-                  <h2 className="font-semibold mb-4 text-lg">Verification Status</h2>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        user.verified ? 'bg-green-100 dark:bg-green-950' : 'bg-yellow-100 dark:bg-yellow-950'
-                      }`}>
-                        {user.verified ? (
-                          <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        ) : (
-                          <MapPin className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-semibold" data-testid="text-verification-status">
-                          {user.verified ? "ID Verified" : "Pending Verification"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.verified
-                            ? "This user has completed identity verification"
-                            : "User identity verification in progress"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Side Info Card */}
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Account Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Account Type</p>
-                  <p className="font-semibold" data-testid="text-account-type">
-                    {isOwner ? "Property Owner" : "Tenant Seeker"}
-                  </p>
-                </div>
-
-                {isOwner && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Properties Listed</p>
-                    <p className="font-semibold text-lg" data-testid="text-properties-count">
-                      {propertiesLoading ? "-" : properties?.length || 0}
-                    </p>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                data-testid="button-send-otp"
+              >
+                {isLoading ? "Sending..." : "Send OTP"}
+              </Button>
+            </form>
+          </Form>
+        ) : (
+          <Form {...verifyForm}>
+            <form onSubmit={verifyForm.handleSubmit(handleVerifyOTP)} className="space-y-4">
+              <div className="text-sm text-muted-foreground mb-4">
+                Enter the 6-digit code sent to {userPhone}
+                {otpExpiry && (
+                  <div className="text-xs mt-1">
+                    Expires at {otpExpiry.toLocaleTimeString()}
                   </div>
                 )}
+              </div>
 
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Member Since</p>
-                  <p className="font-semibold" data-testid="text-member-since">
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN") : "Recently"}
-                  </p>
-                </div>
-
-                {user.verified && (
-                  <div className="pt-4 border-t">
-                    <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-950 rounded-md">
-                      <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                        Verified Member
-                      </span>
-                    </div>
-                  </div>
+              <FormField
+                control={verifyForm.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Verification Code</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="000000"
+                        maxLength={6}
+                        {...field}
+                        data-testid="input-otp-code"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </CardContent>
-            </Card>
+              />
 
-            {/* Properties Preview for Owners */}
-            {isOwner && properties && properties.length > 0 && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Home className="h-4 w-4" />
-                    Recent Properties
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {properties.slice(0, 3).map((property) => (
-                    <a
-                      key={property.id}
-                      href={`/property/${property.id}`}
-                      className="block p-2 rounded hover-elevate transition-colors"
-                      data-testid={`link-property-${property.id}`}
-                    >
-                      <p className="font-medium text-sm truncate">{property.title}</p>
-                      <p className="text-xs text-muted-foreground">₹{property.price}/month</p>
-                    </a>
-                  ))}
-                  {properties.length > 3 && (
-                    <p className="text-xs text-muted-foreground pt-2">
-                      +{properties.length - 3} more properties
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setStep("phone")}
+                  data-testid="button-back-to-phone"
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={isLoading}
+                  data-testid="button-verify-otp"
+                >
+                  {isLoading ? "Verifying..." : "Verify"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
+      </CardContent>
+    </Card>
   );
 }

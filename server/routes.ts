@@ -179,6 +179,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/otp/send", authenticateToken, async (req, res) => {
+    try {
+      const { phone } = req.body;
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number required" });
+      }
+
+      // Generate 6-digit OTP
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      const otp = await storage.createOtp({
+        userId: req.userId,
+        phone,
+        code,
+        expiresAt,
+        verified: false,
+      });
+
+      // In production, send OTP via SMS using Twilio or similar
+      // For now, log it for testing
+      console.log(`OTP Code for ${phone}: ${code}`);
+
+      res.json({ 
+        message: "OTP sent successfully", 
+        expiresAt,
+        code // Remove in production
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/otp/verify", authenticateToken, async (req, res) => {
+    try {
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ message: "OTP code required" });
+      }
+
+      const verified = await storage.verifyOtp(req.userId, code);
+      if (!verified) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+
+      // Mark user as verified
+      await storage.updateUser(req.userId, { verified: true });
+
+      res.json({ message: "Phone verified successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/users/:id", async (req, res) => {
     try {
       const user = await storage.getUser(req.params.id);

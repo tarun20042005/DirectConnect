@@ -59,6 +59,8 @@ export class MemStorage implements IStorage {
   private appointments: Map<string, Appointment>;
   private reviews: Map<string, Review>;
   private savedProperties: Map<string, SavedProperty>;
+  private otpCodes: Map<string, any>;
+  private payments: Map<string, any>;
 
   constructor() {
     this.users = new Map();
@@ -68,6 +70,8 @@ export class MemStorage implements IStorage {
     this.appointments = new Map();
     this.reviews = new Map();
     this.savedProperties = new Map();
+    this.otpCodes = new Map();
+    this.payments = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -274,14 +278,12 @@ export class MemStorage implements IStorage {
   async createOtp(otp: any): Promise<any> {
     const id = randomUUID();
     const otpEntry = { ...otp, id, createdAt: new Date() };
-    (this as any).otpCodes = (this as any).otpCodes || new Map();
-    (this as any).otpCodes.set(id, otpEntry);
+    this.otpCodes.set(id, otpEntry);
     return otpEntry;
   }
 
   async getOtpByUserAndCode(userId: string, code: string): Promise<any> {
-    (this as any).otpCodes = (this as any).otpCodes || new Map();
-    return Array.from((this as any).otpCodes.values()).find(
+    return Array.from(this.otpCodes.values()).find(
       (o: any) => o.userId === userId && o.code === code && !o.verified && new Date(o.expiresAt) > new Date()
     );
   }
@@ -289,7 +291,7 @@ export class MemStorage implements IStorage {
   async verifyOtp(userId: string, code: string): Promise<boolean> {
     const otp = await this.getOtpByUserAndCode(userId, code);
     if (otp) {
-      (this as any).otpCodes.set(otp.id, { ...otp, verified: true });
+      this.otpCodes.set(otp.id, { ...otp, verified: true });
       return true;
     }
     return false;
@@ -298,14 +300,12 @@ export class MemStorage implements IStorage {
   async createPayment(payment: any): Promise<any> {
     const id = randomUUID();
     const paymentEntry = { ...payment, id, createdAt: new Date() };
-    (this as any).payments = (this as any).payments || new Map();
-    (this as any).payments.set(id, paymentEntry);
+    this.payments.set(id, paymentEntry);
     return paymentEntry;
   }
 
   async getPayment(id: string): Promise<any> {
-    (this as any).payments = (this as any).payments || new Map();
-    return Array.from((this as any).payments.values()).find((p: any) => p.id === id);
+    return Array.from(this.payments.values()).find((p: any) => p.id === id);
   }
 }
 
