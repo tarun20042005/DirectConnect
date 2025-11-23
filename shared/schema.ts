@@ -83,6 +83,16 @@ export const savedProperties = pgTable("saved_properties", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const otpCodes = pgTable("otp_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  code: varchar("code", { length: 6 }).notNull(),
+  phone: text("phone").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -133,3 +143,11 @@ export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 export type InsertSavedProperty = z.infer<typeof insertSavedPropertySchema>;
 export type SavedProperty = typeof savedProperties.$inferSelect;
+
+export const insertOtpSchema = createInsertSchema(otpCodes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertOtp = z.infer<typeof insertOtpSchema>;
+export type Otp = typeof otpCodes.$inferSelect;

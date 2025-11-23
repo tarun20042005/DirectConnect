@@ -42,6 +42,10 @@ export interface IStorage {
   getSavedProperties(userId: string): Promise<SavedProperty[]>;
   createSavedProperty(savedProperty: InsertSavedProperty): Promise<SavedProperty>;
   deleteSavedProperty(userId: string, propertyId: string): Promise<boolean>;
+
+  createOtp(otp: any): Promise<any>;
+  getOtpByUserAndCode(userId: string, code: string): Promise<any>;
+  verifyOtp(userId: string, code: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -263,22 +267,30 @@ export class MemStorage implements IStorage {
     }
     return false;
   }
-}
 
-// Use database storage if DATABASE_URL is set, otherwise fall back to in-memory
-let storage: IStorage;
-
-if (process.env.DATABASE_URL) {
-  try {
-    const { DatabaseStorage } = await import("./storage-db");
-    storage = new DatabaseStorage();
-    console.log("Using database storage");
-  } catch (e) {
-    console.log("Database not available, falling back to memory storage");
-    storage = new MemStorage();
+  async createOtp(otp: any): Promise<any> {
+    const id = randomUUID();
+    const otpEntry = { ...otp, id, createdAt: new Date() };
+    (this as any).otpCodes = (this as any).otpCodes || new Map();
+    (this as any).otpCodes.set(id, otpEntry);
+    return otpEntry;
   }
-} else {
-  storage = new MemStorage();
+
+  async getOtpByUserAndCode(userId: string, code: string): Promise<any> {
+    (this as any).otpCodes = (this as any).otpCodes || new Map();
+    return Array.from((this as any).otpCodes.values()).find(
+      (o: any) => o.userId === userId && o.code === code && !o.verified && new Date(o.expiresAt) > new Date()
+    );
+  }
+
+  async verifyOtp(userId: string, code: string): Promise<boolean> {
+    const otp = await this.getOtpByUserAndCode(userId, code);
+    if (otp) {
+      (this as any).otpCodes.set(otp.id, { ...otp, verified: true });
+      return true;
+    }
+    return false;
+  }
 }
 
-export { storage };
+export const storage = new MemStorage();
