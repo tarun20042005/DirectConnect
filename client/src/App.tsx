@@ -18,6 +18,8 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import HowItWorks from "@/pages/HowItWorks";
+import TrustSafety from "@/pages/TrustSafety";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -38,6 +40,8 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/terms" component={TermsOfService} />
           <Route path="/privacy" component={PrivacyPolicy} />
+          <Route path="/how-it-works" component={HowItWorks} />
+          <Route path="/trust-safety" component={TrustSafety} />
           <Route component={NotFound} />
         </Switch>
       </main>
