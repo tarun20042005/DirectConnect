@@ -64,7 +64,7 @@ export default function UserProfile() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setLocation(-1)}
+          onClick={() => window.history.back()}
           className="mb-6"
           data-testid="button-back"
         >
@@ -88,7 +88,7 @@ export default function UserProfile() {
                       <h1 className="text-3xl font-bold" data-testid="text-username">
                         {user.fullName}
                       </h1>
-                      <VerificationBadge verified={user.verified} />
+                      <VerificationBadge verified={user.verified ?? false} />
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -104,11 +104,11 @@ export default function UserProfile() {
                     </div>
 
                     <p className="text-sm text-muted-foreground">
-                      Member since {new Date(user.createdAt).toLocaleDateString("en-IN", {
+                      Member since {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
-                      })}
+                      }) : "Recently"}
                     </p>
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export default function UserProfile() {
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Member Since</p>
                   <p className="font-semibold" data-testid="text-member-since">
-                    {new Date(user.createdAt).toLocaleDateString("en-IN")}
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN") : "Recently"}
                   </p>
                 </div>
 
