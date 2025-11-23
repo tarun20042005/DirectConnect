@@ -20,6 +20,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import HowItWorks from "@/pages/HowItWorks";
 import TrustSafety from "@/pages/TrustSafety";
+import DepositPayment from "@/pages/DepositPayment";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -42,6 +43,7 @@ function Router() {
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/trust-safety" component={TrustSafety} />
+          <Route path="/deposit/:propertyId" component={DepositPayment} />
           <Route component={NotFound} />
         </Switch>
       </main>

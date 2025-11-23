@@ -46,6 +46,9 @@ export interface IStorage {
   createOtp(otp: any): Promise<any>;
   getOtpByUserAndCode(userId: string, code: string): Promise<any>;
   verifyOtp(userId: string, code: string): Promise<boolean>;
+
+  createPayment(payment: any): Promise<any>;
+  getPayment(id: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -290,6 +293,19 @@ export class MemStorage implements IStorage {
       return true;
     }
     return false;
+  }
+
+  async createPayment(payment: any): Promise<any> {
+    const id = randomUUID();
+    const paymentEntry = { ...payment, id, createdAt: new Date() };
+    (this as any).payments = (this as any).payments || new Map();
+    (this as any).payments.set(id, paymentEntry);
+    return paymentEntry;
+  }
+
+  async getPayment(id: string): Promise<any> {
+    (this as any).payments = (this as any).payments || new Map();
+    return Array.from((this as any).payments.values()).find((p: any) => p.id === id);
   }
 }
 
