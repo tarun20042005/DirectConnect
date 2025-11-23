@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Home, MessageSquare, Calendar, ShieldCheck, MapPin, Bed, Bath, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import heroImage from "@assets/generated_images/hero_background_apartment_cityscape.png";
+import heroImage from "@assets/generated_images/south_indian_temple_landscape_with_rice_fields_and_backwaters.png";
 import type { Property } from "@shared/schema";
 
 export default function HomePage() {

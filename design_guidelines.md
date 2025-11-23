@@ -1,7 +1,7 @@
 # DirectConnect Rentals: Design Guidelines
 
 ## Design Approach
-**Reference-Based Approach** inspired by Airbnb's trustworthy marketplace aesthetic, Zillow's data-rich property displays, and Linear's clean typography. This platform requires visual appeal to build trust while maintaining functional clarity for property search and communication.
+**Reference-Based Approach** inspired by Airbnb's trustworthy marketplace aesthetic, Zillow's data-rich property displays, and Linear's clean typography. The visual design incorporates South Indian cultural elements reflecting the platform's focus on Tamil Nadu cities (Bangalore, Chennai, Coimbatore, Tiruppur). This platform requires visual appeal to build trust while maintaining functional clarity for property search and communication.
 
 ## Core Design Principles
 1. **Trust Through Clarity**: Clean layouts with ample whitespace convey professionalism
@@ -175,7 +175,7 @@
 
 ## Images
 
-**Hero Background**: Modern, welcoming apartment interior or city skyline at sunset/golden hour. Should convey opportunity and new beginnings. Overlay with dark gradient (opacity 40-50%) for text readability.
+**Hero Background**: South Indian landscape featuring temple architecture, coconut palm trees, rice terraces, and traditional gopuram towers with golden and orange hues reflecting the region's rich heritage. The imagery conveys cultural authenticity, opportunity, and roots while welcoming users to find homes in South India. Overlay with dark gradient (opacity 40-50%) for text readability.
 
 **Property Listings**: High-quality interior/exterior shots. Recommend 16:9 aspect ratio, minimum 1200px width. Show living spaces, kitchens, bedrooms.
 
