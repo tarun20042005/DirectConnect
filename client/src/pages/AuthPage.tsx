@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Home, User as UserIcon } from "lucide-react";
+import { Home, User as UserIcon, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveAuthUser } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isValidIndianPhone, formatIndianPhone } from "@/lib/phone";
+import { validatePasswordStrength } from "@/lib/password";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -24,7 +25,10 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().refine(
+    (password) => validatePasswordStrength(password).isValid,
+    "Password must be at least 8 characters with uppercase, lowercase, and special character"
+  ),
   phone: z.string().refine(
     (phone) => !phone || isValidIndianPhone(phone),
     "Please enter a valid 10-digit Indian phone number"
@@ -58,6 +62,9 @@ export default function AuthPage() {
       role: "tenant",
     },
   });
+
+  const passwordValue = signupForm.watch("password");
+  const passwordValidation = validatePasswordStrength(passwordValue || "");
 
   const handleLogin = async (data: LoginForm) => {
     setIsLoading(true);
@@ -228,6 +235,48 @@ export default function AuthPage() {
                             {...field}
                           />
                         </FormControl>
+                        <div className="mt-2 space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            {passwordValidation.hasMinLength ? (
+                              <Check className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <X className="h-4 w-4 text-red-600" />
+                            )}
+                            <span className={passwordValidation.hasMinLength ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                              At least 8 characters
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {passwordValidation.hasUppercase ? (
+                              <Check className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <X className="h-4 w-4 text-red-600" />
+                            )}
+                            <span className={passwordValidation.hasUppercase ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                              One uppercase letter (A-Z)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {passwordValidation.hasLowercase ? (
+                              <Check className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <X className="h-4 w-4 text-red-600" />
+                            )}
+                            <span className={passwordValidation.hasLowercase ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                              One lowercase letter (a-z)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {passwordValidation.hasSpecialChar ? (
+                              <Check className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <X className="h-4 w-4 text-red-600" />
+                            )}
+                            <span className={passwordValidation.hasSpecialChar ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                              One special character (!@#$%^&*)
+                            </span>
+                          </div>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
