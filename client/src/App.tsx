@@ -14,6 +14,10 @@ import Dashboard from "@/pages/Dashboard";
 import ListProperty from "@/pages/ListProperty";
 import ChatPage from "@/pages/ChatPage";
 import ScheduleViewing from "@/pages/ScheduleViewing";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +34,10 @@ function Router() {
           <Route path="/list-property" component={ListProperty} />
           <Route path="/chat/:propertyId" component={ChatPage} />
           <Route path="/schedule/:propertyId" component={ScheduleViewing} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/terms" component={TermsOfService} />
+          <Route path="/privacy" component={PrivacyPolicy} />
           <Route component={NotFound} />
         </Switch>
       </main>
