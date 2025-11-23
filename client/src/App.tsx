@@ -21,6 +21,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import HowItWorks from "@/pages/HowItWorks";
 import TrustSafety from "@/pages/TrustSafety";
 import DepositPayment from "@/pages/DepositPayment";
+import PropertyComparisonPage from "@/pages/PropertyComparison";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/trust-safety" component={TrustSafety} />
           <Route path="/deposit/:propertyId" component={DepositPayment} />
+          <Route path="/compare" component={PropertyComparisonPage} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { SlidersHorizontal, Map, List } from "lucide-react";
+import { SlidersHorizontal, Map, List, GitCompare } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyMap } from "@/components/PropertyMap";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +18,10 @@ export default function SearchResults() {
   const [, setLocation] = useLocation();
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [comparisonCount, setComparisonCount] = useState(() => {
+    const saved = localStorage.getItem('comparisonProperties');
+    return saved ? JSON.parse(saved).length : 0;
+  });
 
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [bedrooms, setBedrooms] = useState("");
@@ -191,6 +195,20 @@ export default function SearchResults() {
                 >
                   <Map className="h-4 w-4" />
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setLocation("/compare")}
+                  className="relative"
+                  data-testid="button-open-comparison"
+                >
+                  <GitCompare className="h-4 w-4 mr-2" />
+                  Compare
+                  {comparisonCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                      {comparisonCount}
+                    </span>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
@@ -216,11 +234,29 @@ export default function SearchResults() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredProperties.map((property) => (
-                      <PropertyCard
-                        key={property.id}
-                        property={property}
-                        onClick={() => setLocation(`/property/${property.id}`)}
-                      />
+                      <div key={property.id} className="relative">
+                        <PropertyCard
+                          property={property}
+                          onClick={() => setLocation(`/property/${property.id}`)}
+                        />
+                        <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-3 py-2 rounded-md">
+                          <Checkbox
+                            id={`compare-${property.id}`}
+                            onCheckedChange={(checked) => {
+                              const saved = JSON.parse(localStorage.getItem('comparisonProperties') || '[]');
+                              if (checked && saved.length < 3) {
+                                saved.push(property.id);
+                              } else if (!checked) {
+                                const index = saved.indexOf(property.id);
+                                if (index > -1) saved.splice(index, 1);
+                              }
+                              localStorage.setItem('comparisonProperties', JSON.stringify(saved));
+                              setComparisonCount(saved.length);
+                            }}
+                            data-testid={`checkbox-add-compare-${property.id}`}
+                          />
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}

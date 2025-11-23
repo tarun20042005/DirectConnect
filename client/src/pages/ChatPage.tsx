@@ -44,7 +44,20 @@ export default function ChatPage() {
     // Construct WebSocket URL using the same origin as current page
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const origin = window.location.origin.replace(/^https?:/, '');
+    
+    // Safety check: ensure we have a valid origin
+    if (!origin || origin.includes("undefined") || origin.includes("localhost:undefined")) {
+      console.error("Invalid origin for WebSocket:", origin);
+      return;
+    }
+    
     const wsUrl = `${protocol}${origin}/ws`;
+    
+    // Final safety check on the constructed URL
+    if (!wsUrl || wsUrl.includes("undefined")) {
+      console.error("Invalid WebSocket URL:", wsUrl);
+      return;
+    }
     
     console.log("Connecting to WebSocket:", wsUrl);
     
