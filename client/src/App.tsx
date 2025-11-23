@@ -12,6 +12,7 @@ import SearchResults from "@/pages/SearchResults";
 import PropertyDetail from "@/pages/PropertyDetail";
 import Dashboard from "@/pages/Dashboard";
 import ListProperty from "@/pages/ListProperty";
+import EditProperty from "@/pages/EditProperty";
 import ChatPage from "@/pages/ChatPage";
 import ScheduleViewing from "@/pages/ScheduleViewing";
 import About from "@/pages/About";
@@ -38,6 +39,7 @@ function Router() {
           <Route path="/user/:userId" component={UserProfile} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/list-property" component={ListProperty} />
+          <Route path="/edit-property/:id" component={EditProperty} />
           <Route path="/chat/:propertyId" component={ChatPage} />
           <Route path="/schedule/:propertyId" component={ScheduleViewing} />
           <Route path="/about" component={About} />
