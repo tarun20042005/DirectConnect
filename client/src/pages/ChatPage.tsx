@@ -41,9 +41,12 @@ export default function ChatPage() {
   useEffect(() => {
     if (!propertyId || !user.token) return;
     
-    const host = window.location.host || 'localhost:5000';
+    // Construct WebSocket URL using the same origin as current page
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = window.location.host;
     const wsUrl = `${protocol}//${host}/ws`;
+    
+    console.log("Connecting to WebSocket:", wsUrl);
     
     try {
       const socket = new WebSocket(wsUrl);

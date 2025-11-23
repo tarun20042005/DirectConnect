@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Home, MessageSquare, Calendar, ShieldCheck, MapPin, Bed, Bath, DollarSign } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import heroImage from "@assets/generated_images/hero_background_apartment_cityscape.png";
-import livingRoomImage from "@assets/generated_images/living_room_property_listing.png";
-import kitchenImage from "@assets/generated_images/modern_kitchen_interior.png";
-import bedroomImage from "@assets/generated_images/bedroom_interior_photography.png";
+import type { Property } from "@shared/schema";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
   const [searchLocation, setSearchLocation] = useState("");
   const [propertyType, setPropertyType] = useState("");
+
+  const { data: allProperties, isLoading } = useQuery<Property[]>({
+    queryKey: ["/api/properties"],
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,38 +45,16 @@ export default function HomePage() {
     }
   ];
 
-  const featuredProperties = [
-    {
-      id: "1",
-      image: livingRoomImage,
-      title: "Modern Apartment in Bangalore",
-      price: "50,000",
-      location: "Bangalore, Karnataka",
-      bedrooms: 2,
-      bathrooms: 2,
-      verified: true
-    },
-    {
-      id: "2",
-      image: kitchenImage,
-      title: "Luxury 3BHK in Mumbai",
-      price: "85,000",
-      location: "Mumbai, Maharashtra",
-      bedrooms: 3,
-      bathrooms: 2,
-      verified: true
-    },
-    {
-      id: "3",
-      image: bedroomImage,
-      title: "Cozy Studio in Delhi",
-      price: "35,000",
-      location: "Delhi",
-      bedrooms: 1,
-      bathrooms: 1,
-      verified: false
-    }
-  ];
+  const featuredProperties = (allProperties || []).slice(0, 4).map(prop => ({
+    id: prop.id,
+    image: (typeof prop.images === 'string' ? JSON.parse(prop.images) : prop.images)?.[0] || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600",
+    title: prop.title,
+    price: prop.price,
+    location: `${prop.city}, ${prop.state}`,
+    bedrooms: prop.bedrooms,
+    bathrooms: prop.bathrooms,
+    verified: true
+  }));
 
   return (
     <div className="min-h-screen">
@@ -99,7 +81,7 @@ export default function HomePage() {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Search cities - Mumbai, Bangalore, Delhi, Pune..."
+                    placeholder="Search cities - Bangalore, Chennai, Coimbatore, Tiruppur..."
                     value={searchLocation}
                     onChange={(e) => setSearchLocation(e.target.value)}
                     className="pl-10"
