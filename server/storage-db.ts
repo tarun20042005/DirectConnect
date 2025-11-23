@@ -6,11 +6,16 @@ import {
   type Appointment, type InsertAppointment,
   type Review, type InsertReview,
   type SavedProperty, type InsertSavedProperty,
-  users, properties, chats, messages, appointments, reviews, savedProperties
+  users, properties, chats, messages, appointments, reviews, savedProperties,
+  otpCodes, payments
 } from "@shared/schema";
-import { db } from "./db";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import { eq, and } from "drizzle-orm";
 import type { IStorage } from "./storage";
+
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql);
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -140,5 +145,36 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(savedProperties)
       .where(and(eq(savedProperties.userId, userId), eq(savedProperties.propertyId, propertyId)));
     return result.rowCount > 0;
+  }
+
+  async createOtp(otp: any): Promise<any> {
+    const result = await db.insert(otpCodes).values(otp).returning();
+    return result[0];
+  }
+
+  async getOtpByUserAndCode(userId: string, code: string): Promise<any> {
+    const result = await db
+      .select()
+      .from(otpCodes)
+      .where(and(eq(otpCodes.userId, userId), eq(otpCodes.code, code)));
+    return result[0];
+  }
+
+  async verifyOtp(userId: string, code: string): Promise<boolean> {
+    const result = await db
+      .update(otpCodes)
+      .set({ verified: true })
+      .where(and(eq(otpCodes.userId, userId), eq(otpCodes.code, code)));
+    return result.rowCount > 0;
+  }
+
+  async createPayment(payment: any): Promise<any> {
+    const result = await db.insert(payments).values(payment).returning();
+    return result[0];
+  }
+
+  async getPayment(id: string): Promise<any> {
+    const result = await db.select().from(payments).where(eq(payments.id, id));
+    return result[0];
   }
 }
