@@ -30,12 +30,8 @@ function authenticateToken(req: any, res: any, next: any) {
       return res.status(403).json({ message: "Invalid or expired token" });
     }
 
-    const user = await storage.getUser(payload.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    req.user = user;
+    // Attach userId from token to request
+    req.userId = payload.userId;
     next();
   });
 }
@@ -147,7 +143,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/properties", authenticateToken, async (req, res) => {
     try {
-      const property = await storage.createProperty(req.body);
+      // Ensure ownerId matches authenticated user
+      const propertyData = {
+        ...req.body,
+        ownerId: req.userId,
+      };
+      const property = await storage.createProperty(propertyData);
       res.status(201).json(property);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
