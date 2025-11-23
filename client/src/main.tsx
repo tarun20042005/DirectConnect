@@ -3,21 +3,18 @@ import App from "./App";
 import "./index.css";
 
 // Suppress Vite HMR WebSocket errors in Replit environment
-// These occur when Vite's HMR tries to connect with an invalid URL (localhost:undefined)
 if (typeof window !== 'undefined') {
-  // Capture and suppress unhandled promise rejections from Vite HMR
+  // Intercept unhandledrejection before anything else
   window.addEventListener('unhandledrejection', (event) => {
-    const message = event.reason?.message || String(event.reason);
-    // Suppress Vite HMR connection errors with undefined port
-    if (message?.includes('WebSocket') && (message?.includes('undefined') || message?.includes('localhost:undefined'))) {
+    const msg = event.reason?.message || String(event.reason);
+    if (msg?.includes('WebSocket') && msg?.includes('invalid')) {
       event.preventDefault();
     }
-  });
+  }, true);
 
-  // Also suppress as error events
+  // Suppress errors at capture phase
   window.addEventListener('error', (event) => {
-    const message = event.message || '';
-    if (message.includes('WebSocket') && (message.includes('undefined') || message.includes('localhost:undefined'))) {
+    if (event?.message?.includes('WebSocket') && event?.message?.includes('invalid')) {
       event.preventDefault();
       return true;
     }

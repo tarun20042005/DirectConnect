@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { MapPin, Bed, Bath, Square, ShieldCheck, MessageSquare, Calendar, Heart, Share2, Eye, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PropertyMap } from "@/components/PropertyMap";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import type { Property, User } from "@shared/schema";
 import { getAuthUser } from "@/lib/auth";
 
@@ -234,16 +235,21 @@ export default function PropertyDetail() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {owner && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <Avatar>
-                      <AvatarImage src={owner.avatarUrl || undefined} />
-                      <AvatarFallback>{ownerInitials}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold">{owner.fullName}</p>
-                      <p className="text-sm text-muted-foreground">Property Owner</p>
+                  <a href={`/user/${owner.id}`} className="block hover-elevate">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <Avatar>
+                        <AvatarImage src={owner.avatarUrl || undefined} />
+                        <AvatarFallback>{ownerInitials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{owner.fullName}</p>
+                          <VerificationBadge verified={owner.verified || false} size="sm" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">Property Owner</p>
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 )}
 
                 {user ? (

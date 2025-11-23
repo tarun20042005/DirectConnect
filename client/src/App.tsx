@@ -22,6 +22,7 @@ import HowItWorks from "@/pages/HowItWorks";
 import TrustSafety from "@/pages/TrustSafety";
 import DepositPayment from "@/pages/DepositPayment";
 import PropertyComparisonPage from "@/pages/PropertyComparison";
+import UserProfile from "@/pages/UserProfile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/auth" component={AuthPage} />
           <Route path="/search" component={SearchResults} />
           <Route path="/property/:id" component={PropertyDetail} />
+          <Route path="/user/:userId" component={UserProfile} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/list-property" component={ListProperty} />
           <Route path="/chat/:propertyId" component={ChatPage} />
