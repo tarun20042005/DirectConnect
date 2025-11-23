@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
+import { Image as ImageIcon, X } from "lucide-react";
 import livingRoomImage from "@assets/generated_images/living_room_property_listing.png";
 import kitchenImage from "@assets/generated_images/modern_kitchen_interior.png";
 import bedroomImage from "@assets/generated_images/bedroom_interior_photography.png";
@@ -27,11 +28,14 @@ const listingSchema = insertPropertySchema.extend({
 
 type ListingForm = z.infer<typeof listingSchema>;
 
+const indianStates = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi"];
+
 export default function ListProperty() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([livingRoomImage, kitchenImage, bedroomImage]);
   const user = getAuthUser();
 
   if (!user || !isOwner(user)) {
@@ -52,17 +56,49 @@ export default function ListProperty() {
       bathrooms: 1,
       sqft: "",
       address: "",
-      city: "",
-      state: "",
+      city: "Bangalore",
+      state: "Karnataka",
       zipCode: "",
-      latitude: "",
-      longitude: "",
-      images: [livingRoomImage, kitchenImage, bedroomImage],
+      latitude: "12.9716",
+      longitude: "77.5946",
+      images: uploadedImages,
       amenities: [],
       virtualTourUrl: "",
       available: true,
     },
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    try {
+      const newImages: string[] = [];
+      for (const file of Array.from(files)) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            newImages.push(event.target.result as string);
+            if (newImages.length === files.length) {
+              const allImages = [...uploadedImages, ...newImages];
+              setUploadedImages(allImages);
+              form.setValue("images", allImages);
+              toast({ title: "Success", description: `${files.length} images uploaded` });
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: "Failed to upload images", variant: "destructive" });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+    setUploadedImages(newImages);
+    form.setValue("images", newImages);
+  };
 
   const amenitiesOptions = [
     "Parking", "WiFi", "Air Conditioning", "Heating", "Washer/Dryer",
@@ -244,11 +280,11 @@ export default function ListProperty() {
                       name="price"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Monthly Rent ($)</FormLabel>
+                          <FormLabel>Monthly Rent (₹)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
-                              placeholder="1500"
+                              placeholder="50000"
                               data-testid="input-price"
                               {...field}
                             />
@@ -263,11 +299,11 @@ export default function ListProperty() {
                       name="deposit"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Deposit ($)</FormLabel>
+                          <FormLabel>Deposit (₹)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
-                              placeholder="1500"
+                              placeholder="100000"
                               data-testid="input-deposit"
                               {...field}
                             />
@@ -310,7 +346,7 @@ export default function ListProperty() {
                         <FormItem>
                           <FormLabel>City</FormLabel>
                           <FormControl>
-                            <Input placeholder="New York" data-testid="input-city" {...field} />
+                            <Input placeholder="Bangalore, Mumbai, Delhi" data-testid="input-city" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -323,9 +359,18 @@ export default function ListProperty() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input placeholder="NY" data-testid="input-state" {...field} />
-                          </FormControl>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-state">
+                                <SelectValue placeholder="Select State" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {indianStates.map(state => (
+                                <SelectItem key={state} value={state}>{state}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -336,9 +381,9 @@ export default function ListProperty() {
                       name="zipCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ZIP Code</FormLabel>
+                          <FormLabel>PIN Code</FormLabel>
                           <FormControl>
-                            <Input placeholder="10001" data-testid="input-zipcode" {...field} />
+                            <Input placeholder="560001" data-testid="input-zipcode" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -354,9 +399,9 @@ export default function ListProperty() {
                         <FormItem>
                           <FormLabel>Latitude (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="40.7128" data-testid="input-latitude" {...field} />
+                            <Input placeholder="12.9716" data-testid="input-latitude" {...field} />
                           </FormControl>
-                          <FormDescription>Will use default if not provided</FormDescription>
+                          <FormDescription>Will use Bangalore coordinates if not provided</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -369,9 +414,9 @@ export default function ListProperty() {
                         <FormItem>
                           <FormLabel>Longitude (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="-74.0060" data-testid="input-longitude" {...field} />
+                            <Input placeholder="77.5946" data-testid="input-longitude" {...field} />
                           </FormControl>
-                          <FormDescription>Will use default if not provided</FormDescription>
+                          <FormDescription>Will use Bangalore coordinates if not provided</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

@@ -130,6 +130,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/upload", authenticateToken, async (req, res) => {
+    try {
+      const { files } = req.body;
+      if (!Array.isArray(files)) {
+        return res.status(400).json({ message: "Invalid files format" });
+      }
+      
+      const validImages = files.filter(f => f && typeof f === 'string' && f.length > 0);
+      res.json({ images: validImages });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/properties", authenticateToken, async (req, res) => {
     try {
       const property = await storage.createProperty(req.body);
