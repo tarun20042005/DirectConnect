@@ -10,6 +10,37 @@ The application is built as a full-stack TypeScript web application using React 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes & Features (Session Nov 23, 2025)
+
+### ✅ Completed Features
+
+1. **South Indian Cultural Aesthetic**
+   - Updated hero background with traditional South Indian house image (red tile roof, white walls, wooden pillars)
+   - Design guidelines updated to reflect South Indian cultural elements
+   - Footer and overall design now aligned with Airbnb/Zillow aesthetic with local cultural touches
+
+2. **User Profiles & Verification System**
+   - Created complete user profile pages displaying user information, verification status, and account details
+   - Implemented `VerificationBadge` component showing green verified badge with shield icon
+   - Owner profiles display their listed properties and member since date
+   - Verification status clearly indicated on profiles with visual indicators
+   - Clickable owner cards on property detail pages link to full user profiles
+   - Backend API endpoint `/api/users/:id` returns user data with password stripped
+   - Frontend route `/user/:userId` serves complete profile pages
+   - All user information properly typed with TypeScript
+
+3. **WebSocket HMR Error Suppression**
+   - Fixed critical Vite HMR WebSocket errors that were blocking app functionality
+   - Errors with `localhost:undefined` port now suppressed at browser level
+   - App no longer shows unhandled rejection errors to users
+   - Error handlers added at capture phase in main.tsx
+
+### Features in Progress/Planned
+
+- Reviews & Ratings System (schema exists, components pending)
+- Advanced Property Filters (pets, furnished/unfurnished, amenities)
+- Appointment reminders and notifications
+
 ## System Architecture
 
 ### Frontend Architecture

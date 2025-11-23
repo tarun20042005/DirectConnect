@@ -10,6 +10,7 @@ import { MapPin, Bed, Bath, Square, ShieldCheck, MessageSquare, Calendar, Heart,
 import { Skeleton } from "@/components/ui/skeleton";
 import { PropertyMap } from "@/components/PropertyMap";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { PropertyReviews } from "@/components/PropertyReviews";
 import type { Property, User } from "@shared/schema";
 import { getAuthUser } from "@/lib/auth";
 
@@ -219,6 +220,10 @@ export default function PropertyDetail() {
                 ]} zoom={15} />
               </div>
             </div>
+
+            <Separator />
+
+            <PropertyReviews propertyId={property.id} />
           </div>
 
           <div>
