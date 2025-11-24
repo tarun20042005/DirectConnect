@@ -55,7 +55,7 @@ export function PropertyCard({ property, onClick, onSave, isSaved }: PropertyCar
         </div>
 
         <div className="absolute bottom-3 left-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-semibold shadow-lg">
-          ${property.price}/mo
+          ₹{property.price}/mo
         </div>
 
         {images.length > 1 && (
