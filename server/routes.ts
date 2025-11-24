@@ -103,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let foundSignup = null;
       let signupKey = "";
       
-      for (const [key, signup] of pendingSignups.entries()) {
+      for (const [key, signup] of Array.from(pendingSignups.entries())) {
         if (signup.email === email && signup.otp === otpCode) {
           // Check if OTP is not expired
           if (new Date() > signup.expiresAt) {
