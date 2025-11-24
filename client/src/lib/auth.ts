@@ -1,4 +1,5 @@
 import type { User } from "@shared/schema";
+import { queryClient } from "./queryClient";
 
 const AUTH_KEY = "directconnect_user";
 
@@ -22,6 +23,8 @@ export function getAuthUser(): AuthUser | null {
 
 export function clearAuthUser() {
   localStorage.removeItem(AUTH_KEY);
+  // Clear all cached data when user logs out so next user sees fresh data
+  queryClient.clear();
 }
 
 export function isOwner(user: User | null): boolean {
