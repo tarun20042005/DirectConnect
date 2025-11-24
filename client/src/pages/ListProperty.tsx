@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,10 +38,11 @@ export default function ListProperty() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([livingRoomImage, kitchenImage, bedroomImage]);
   const user = getAuthUser();
 
-  if (!user || !isOwner(user)) {
-    setLocation("/auth");
-    return null;
-  }
+  useEffect(() => {
+    if (!user || !isOwner(user)) {
+      setLocation("/auth");
+    }
+  }, [user, setLocation]);
 
   const form = useForm<ListingForm>({
     resolver: zodResolver(listingSchema),

@@ -10,23 +10,34 @@ import { useState, useEffect } from "react";
 export function Header() {
   const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const [user, setUser] = useState(getAuthUser());
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Read auth user from localStorage on mount
+    const authUser = getAuthUser();
+    setUser(authUser);
+  }, []);
 
   useEffect(() => {
     // Update user state when localStorage changes
     const handleStorageChange = () => {
-      setUser(getAuthUser());
+      const authUser = getAuthUser();
+      setUser(authUser);
     };
 
-    // Listen to storage changes from other tabs/windows
+    // Listen to storage changes from other tabs/windows and page visibility
     window.addEventListener("storage", handleStorageChange);
-
-    // Also check on page focus in case this tab changed
     window.addEventListener("focus", handleStorageChange);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        handleStorageChange();
+      }
+    });
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("focus", handleStorageChange);
+      document.removeEventListener("visibilitychange", handleStorageChange);
     };
   }, []);
 
