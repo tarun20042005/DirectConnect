@@ -128,6 +128,35 @@ export default function Dashboard() {
         </div>
       )}
 
+      {!isPropertyOwner && allProperties && allProperties.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-6">Featured Properties</h2>
+          {loadingAllProperties ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="aspect-video w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {allProperties.slice(0, 6).map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  onClick={() => setLocation(`/property/${property.id}`)}
+                  isSaved={savedProperties.some(p => p.id === property.id)}
+                  onSave={() => savePropertyMutation.mutate(property.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <Tabs defaultValue="properties" className="w-full">
         <TabsList>
           <TabsTrigger value="properties" data-testid="tab-properties">
