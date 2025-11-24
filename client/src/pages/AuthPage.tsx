@@ -29,10 +29,10 @@ const signupSchema = z.object({
     (password) => validatePasswordStrength(password).isValid,
     "Password must be at least 8 characters with uppercase, lowercase, and special character"
   ),
-  phone: z.string().refine(
-    (phone) => !phone || isValidIndianPhone(phone),
+  phone: z.string().min(1, "Phone number is required").refine(
+    (phone) => isValidIndianPhone(phone),
     "Please enter a valid 10-digit Indian phone number"
-  ).optional(),
+  ),
   role: z.enum(["tenant", "owner"]),
 });
 
@@ -320,7 +320,7 @@ export default function AuthPage() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number (Optional)</FormLabel>
+                        <FormLabel>Phone Number <span className="text-red-600">*</span></FormLabel>
                         <FormControl>
                           <Input
                             type="tel"
