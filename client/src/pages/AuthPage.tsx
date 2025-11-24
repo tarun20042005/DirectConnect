@@ -46,6 +46,7 @@ export default function AuthPage() {
   const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
   const [otpCode, setOtpCode] = useState("");
   const [pendingSignupData, setPendingSignupData] = useState<any>(null);
+  const [displayOtp, setDisplayOtp] = useState<string | null>(null);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -97,14 +98,15 @@ export default function AuthPage() {
       };
 
       // Call signup initiate to send OTP
-      await apiRequest<any>("POST", "/api/auth/signup-initiate", formattedData);
+      const response = await apiRequest<any>("POST", "/api/auth/signup-initiate", formattedData);
       
       // Store data for verification and move to OTP step
       setPendingSignupData(formattedData);
       setSignupStep("otp");
       setOtpCode("");
+      setDisplayOtp(response.code || null);
       
-      toast({ title: "OTP Sent!", description: `OTP has been sent to ${formattedData.phone}. Check console for OTP (development mode).` });
+      toast({ title: "OTP Sent!", description: `OTP has been sent to ${formattedData.phone}` });
     } catch (error: any) {
       toast({
         title: "Signup initiation failed",
@@ -390,8 +392,31 @@ export default function AuthPage() {
                     Enter the 6-digit OTP sent to {pendingSignupData?.phone}
                   </p>
                 </div>
+
+                {displayOtp && (
+                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">OTP Code for Testing:</p>
+                    <div className="flex items-center gap-2">
+                      <div className="text-3xl font-bold tracking-widest text-blue-600 dark:text-blue-400 flex-1 text-center">
+                        {displayOtp}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(displayOtp);
+                          toast({ title: "Copied!", description: "OTP code copied to clipboard" });
+                        }}
+                        data-testid="button-copy-otp"
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">OTP Code</label>
+                  <label className="text-sm font-medium">Enter OTP Code</label>
                   <Input
                     type="text"
                     placeholder="000000"
@@ -416,6 +441,7 @@ export default function AuthPage() {
                     setSignupStep("form");
                     setPendingSignupData(null);
                     setOtpCode("");
+                    setDisplayOtp(null);
                   }}
                   className="w-full"
                   data-testid="button-back-to-signup"
