@@ -222,7 +222,7 @@ export default function ChatPage() {
               <Separator />
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Monthly Rent</span>
-                <span className="font-semibold text-lg">${property.price}</span>
+                <span className="font-semibold text-lg">₹{property.price}</span>
               </div>
               <Button
                 className="w-full"

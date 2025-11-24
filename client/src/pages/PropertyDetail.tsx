@@ -230,11 +230,11 @@ export default function PropertyDetail() {
             <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle className="text-3xl font-bold text-primary">
-                  ${property.price}<span className="text-base font-normal text-muted-foreground">/month</span>
+                  ₹{property.price}<span className="text-base font-normal text-muted-foreground">/month</span>
                 </CardTitle>
                 {property.deposit && (
                   <p className="text-sm text-muted-foreground">
-                    Deposit: ${property.deposit}
+                    Deposit: ₹{property.deposit}
                   </p>
                 )}
               </CardHeader>

@@ -169,7 +169,7 @@ export default function HomePage() {
                     </div>
                   )}
                   <div className="absolute bottom-3 left-3 bg-primary text-primary-foreground px-3 py-1 rounded-md font-semibold">
-                    ${property.price}/mo
+                    ₹{property.price}/mo
                   </div>
                 </div>
 
