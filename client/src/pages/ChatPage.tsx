@@ -41,19 +41,12 @@ export default function ChatPage() {
   useEffect(() => {
     if (!propertyId || !user.token) return;
     
-    // Construct WebSocket URL using the same origin as current page
+    // Construct WebSocket URL using the same protocol and host as current page
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const origin = window.location.origin.replace(/^https?:/, '');
+    const host = window.location.host; // This includes port if present
+    const wsUrl = `${protocol}//${host}/ws`;
     
-    // Safety check: ensure we have a valid origin
-    if (!origin || origin.includes("undefined") || origin.includes("localhost:undefined")) {
-      console.error("Invalid origin for WebSocket:", origin);
-      return;
-    }
-    
-    const wsUrl = `${protocol}${origin}/ws`;
-    
-    // Final safety check on the constructed URL
+    // Safety check: ensure we have a valid URL
     if (!wsUrl || wsUrl.includes("undefined")) {
       console.error("Invalid WebSocket URL:", wsUrl);
       return;
