@@ -10,10 +10,11 @@ import { useState, useEffect } from "react";
 export function Header() {
   const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const [user, setUser] = useState<any>(null);
+  // Initialize user immediately from localStorage, not null
+  const [user, setUser] = useState<any>(() => getAuthUser());
 
   useEffect(() => {
-    // Read auth user from localStorage on mount
+    // Sync user state when localStorage changes
     const authUser = getAuthUser();
     setUser(authUser);
   }, []);

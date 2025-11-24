@@ -13,10 +13,11 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const user = getAuthUser();
 
-  if (!user) {
-    setLocation("/auth");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) {
+      setLocation("/auth");
+    }
+  }, [user, setLocation]);
 
   const isPropertyOwner = isOwner(user);
 
