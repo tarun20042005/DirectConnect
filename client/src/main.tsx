@@ -4,6 +4,15 @@ import "./index.css";
 
 // CRITICAL: Suppress Vite HMR WebSocket errors in Replit environment
 if (typeof window !== 'undefined') {
+  // Override console.error to suppress WebSocket errors
+  const originalConsoleError = console.error;
+  console.error = function(...args: any[]) {
+    const msg = String(args[0] || '').toLowerCase();
+    if (!msg.includes('websocket') && !msg.includes('localhost:undefined') && !msg.includes('failed to construct')) {
+      originalConsoleError.apply(console, args);
+    }
+  };
+
   // Capture unhandled rejections BEFORE any other listeners
   window.addEventListener('unhandledrejection', (event: any) => {
     const reason = event?.reason;

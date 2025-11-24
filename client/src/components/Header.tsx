@@ -5,12 +5,30 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Home, LogOut, User, Moon, Sun, Plus, Heart, Calendar } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { getAuthUser, clearAuthUser, isOwner } from "@/lib/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function Header() {
   const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState(getAuthUser());
+
+  useEffect(() => {
+    // Update user state when localStorage changes
+    const handleStorageChange = () => {
+      setUser(getAuthUser());
+    };
+
+    // Listen to storage changes from other tabs/windows
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also check on page focus in case this tab changed
+    window.addEventListener("focus", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleStorageChange);
+    };
+  }, []);
 
   const handleLogout = () => {
     clearAuthUser();
