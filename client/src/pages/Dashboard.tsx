@@ -1,9 +1,10 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MessageSquare, Calendar, Heart, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { Home, MessageSquare, Calendar, Heart, Plus, Eye, Edit, Trash2, Search } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import type { Property, Appointment } from "@shared/schema";
@@ -19,14 +20,21 @@ export default function Dashboard() {
     }
   }, [user, setLocation]);
 
-  const isPropertyOwner = isOwner(user);
+  const isPropertyOwner = isOwner(user) || false;
 
   const { data: properties, isLoading: loadingProperties } = useQuery<Property[]>({
-    queryKey: isPropertyOwner ? ["/api/properties/owner", user.id] : ["/api/properties/saved", user.id],
+    queryKey: isPropertyOwner ? ["/api/properties/owner", user?.id] : ["/api/properties/saved", user?.id],
+    enabled: !!user,
+  });
+
+  const { data: allProperties, isLoading: loadingAllProperties } = useQuery<Property[]>({
+    queryKey: ["/api/properties"],
+    enabled: !isPropertyOwner && !!user,
   });
 
   const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({
-    queryKey: ["/api/appointments", user.id],
+    queryKey: ["/api/appointments", user?.id],
+    enabled: !!user,
   });
 
   const stats = [
@@ -98,6 +106,12 @@ export default function Dashboard() {
           <TabsTrigger value="properties" data-testid="tab-properties">
             {isPropertyOwner ? "My Listings" : "Saved Properties"}
           </TabsTrigger>
+          {!isPropertyOwner && (
+            <TabsTrigger value="available" data-testid="tab-available">
+              <Search className="h-4 w-4 mr-2" />
+              Browse Properties
+            </TabsTrigger>
+          )}
           <TabsTrigger value="appointments" data-testid="tab-appointments">
             Appointments
           </TabsTrigger>
@@ -171,6 +185,40 @@ export default function Dashboard() {
             </div>
           )}
         </TabsContent>
+
+        {!isPropertyOwner && (
+          <TabsContent value="available" className="mt-6">
+            {loadingAllProperties ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-video w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : !allProperties || allProperties.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Home className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No properties available</h3>
+                  <p className="text-muted-foreground text-center">Check back soon for new listings from owners</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allProperties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onClick={() => setLocation(`/property/${property.id}`)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )}
 
         <TabsContent value="appointments" className="mt-6">
           {loadingAppointments ? (
