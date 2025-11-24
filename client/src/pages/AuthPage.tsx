@@ -43,6 +43,9 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -84,7 +87,7 @@ export default function AuthPage() {
     }
   };
 
-  const handleSignup = async (data: SignupForm) => {
+  const handleSignupInitiate = async (data: SignupForm) => {
     setIsLoading(true);
     try {
       // Format phone number to standard Indian format
@@ -92,14 +95,43 @@ export default function AuthPage() {
         ...data,
         phone: data.phone ? formatIndianPhone(data.phone) : undefined,
       };
-      const response = await apiRequest<any>("POST", "/api/auth/signup", formattedData);
+
+      // Call signup initiate to send OTP
+      await apiRequest<any>("POST", "/api/auth/signup-initiate", formattedData);
+      
+      // Store data for verification and move to OTP step
+      setPendingSignupData(formattedData);
+      setSignupStep("otp");
+      setOtpCode("");
+      
+      toast({ title: "OTP Sent!", description: `OTP has been sent to ${formattedData.phone}. Check console for OTP (development mode).` });
+    } catch (error: any) {
+      toast({
+        title: "Signup initiation failed",
+        description: error.message || "Could not send OTP",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupVerifyOtp = async () => {
+    if (!otpCode || !pendingSignupData) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await apiRequest<any>("POST", "/api/auth/signup-verify", {
+        ...pendingSignupData,
+        otpCode,
+      });
       saveAuthUser(response);
       toast({ title: "Welcome!", description: "Your account has been created successfully." });
       setLocation("/dashboard");
     } catch (error: any) {
       toast({
-        title: "Signup failed",
-        description: error.message || "Could not create account",
+        title: "OTP verification failed",
+        description: error.message || "Invalid OTP",
         variant: "destructive",
       });
     } finally {
@@ -182,8 +214,9 @@ export default function AuthPage() {
             </TabsContent>
 
             <TabsContent value="signup">
+              {signupStep === "form" ? (
               <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                <form onSubmit={signupForm.handleSubmit(handleSignupInitiate)} className="space-y-4">
                   <FormField
                     control={signupForm.control}
                     name="fullName"
@@ -345,10 +378,52 @@ export default function AuthPage() {
                     disabled={isLoading}
                     data-testid="button-signup-submit"
                   >
-                    {isLoading ? "Creating account..." : "Create Account"}
+                    {isLoading ? "Sending OTP..." : "Send OTP"}
                   </Button>
                 </form>
               </Form>
+              ) : (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Verify Phone Number</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Enter the 6-digit OTP sent to {pendingSignupData?.phone}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">OTP Code</label>
+                  <Input
+                    type="text"
+                    placeholder="000000"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.slice(0, 6))}
+                    maxLength={6}
+                    data-testid="input-otp-code"
+                    className="text-center text-2xl tracking-widest"
+                  />
+                </div>
+                <Button
+                  onClick={handleSignupVerifyOtp}
+                  className="w-full"
+                  disabled={isLoading || otpCode.length !== 6}
+                  data-testid="button-verify-otp"
+                >
+                  {isLoading ? "Verifying..." : "Verify & Create Account"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSignupStep("form");
+                    setPendingSignupData(null);
+                    setOtpCode("");
+                  }}
+                  className="w-full"
+                  data-testid="button-back-to-signup"
+                >
+                  Back to Sign Up
+                </Button>
+              </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

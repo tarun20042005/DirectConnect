@@ -14,6 +14,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
+  checkEmailExists(email: string): Promise<boolean>;
   
   getProperty(id: string): Promise<Property | undefined>;
   getProperties(): Promise<Property[]>;
@@ -82,6 +83,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(
       (user) => user.email === email,
     );
+  }
+
+  async checkEmailExists(email: string): Promise<boolean> {
+    return !!await this.getUserByEmail(email);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
