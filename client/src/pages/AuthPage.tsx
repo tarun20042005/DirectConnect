@@ -43,10 +43,6 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
-  const [otpCode, setOtpCode] = useState("");
-  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
-  const [displayOtp, setDisplayOtp] = useState<string | null>(null);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -88,7 +84,7 @@ export default function AuthPage() {
     }
   };
 
-  const handleSignupInitiate = async (data: SignupForm) => {
+  const handleSignup = async (data: SignupForm) => {
     setIsLoading(true);
     try {
       // Format phone number to standard Indian format
@@ -96,44 +92,14 @@ export default function AuthPage() {
         ...data,
         phone: data.phone ? formatIndianPhone(data.phone) : undefined,
       };
-
-      // Call signup initiate to send OTP
-      const response = await apiRequest<any>("POST", "/api/auth/signup-initiate", formattedData);
-      
-      // Store data for verification and move to OTP step
-      setPendingSignupData(formattedData);
-      setSignupStep("otp");
-      setOtpCode("");
-      setDisplayOtp(response.code || null);
-      
-      toast({ title: "OTP Sent!", description: `OTP has been sent to ${formattedData.phone}` });
-    } catch (error: any) {
-      toast({
-        title: "Signup initiation failed",
-        description: error.message || "Could not send OTP",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignupVerifyOtp = async () => {
-    if (!otpCode || !pendingSignupData) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await apiRequest<any>("POST", "/api/auth/signup-verify", {
-        ...pendingSignupData,
-        otpCode,
-      });
+      const response = await apiRequest<any>("POST", "/api/auth/signup", formattedData);
       saveAuthUser(response);
       toast({ title: "Welcome!", description: "Your account has been created successfully." });
       setLocation("/dashboard");
     } catch (error: any) {
       toast({
-        title: "OTP verification failed",
-        description: error.message || "Invalid OTP",
+        title: "Signup failed",
+        description: error.message || "Could not create account",
         variant: "destructive",
       });
     } finally {
@@ -216,9 +182,8 @@ export default function AuthPage() {
             </TabsContent>
 
             <TabsContent value="signup">
-              {signupStep === "form" ? (
               <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(handleSignupInitiate)} className="space-y-4">
+                <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                   <FormField
                     control={signupForm.control}
                     name="fullName"
@@ -380,76 +345,10 @@ export default function AuthPage() {
                     disabled={isLoading}
                     data-testid="button-signup-submit"
                   >
-                    {isLoading ? "Sending OTP..." : "Send OTP"}
+                    {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
               </Form>
-              ) : (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Verify Phone Number</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Enter the 6-digit OTP sent to {pendingSignupData?.phone}
-                  </p>
-                </div>
-
-                {displayOtp && (
-                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">OTP Code for Testing:</p>
-                    <div className="flex items-center gap-2">
-                      <div className="text-3xl font-bold tracking-widest text-blue-600 dark:text-blue-400 flex-1 text-center">
-                        {displayOtp}
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          navigator.clipboard.writeText(displayOtp);
-                          toast({ title: "Copied!", description: "OTP code copied to clipboard" });
-                        }}
-                        data-testid="button-copy-otp"
-                      >
-                        Copy
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Enter OTP Code</label>
-                  <Input
-                    type="text"
-                    placeholder="000000"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.slice(0, 6))}
-                    maxLength={6}
-                    data-testid="input-otp-code"
-                    className="text-center text-2xl tracking-widest"
-                  />
-                </div>
-                <Button
-                  onClick={handleSignupVerifyOtp}
-                  className="w-full"
-                  disabled={isLoading || otpCode.length !== 6}
-                  data-testid="button-verify-otp"
-                >
-                  {isLoading ? "Verifying..." : "Verify & Create Account"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSignupStep("form");
-                    setPendingSignupData(null);
-                    setOtpCode("");
-                    setDisplayOtp(null);
-                  }}
-                  className="w-full"
-                  data-testid="button-back-to-signup"
-                >
-                  Back to Sign Up
-                </Button>
-              </div>
-              )}
             </TabsContent>
           </Tabs>
         </CardContent>

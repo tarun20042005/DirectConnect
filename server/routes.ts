@@ -8,9 +8,6 @@ import type { User, Chat } from "@shared/schema";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
-// Store pending signups temporarily (in-memory)
-const pendingSignups = new Map<string, any>();
-
 declare global {
   namespace Express {
     interface Request {
@@ -45,107 +42,6 @@ function authenticateToken(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-
-  app.post("/api/auth/signup-initiate", async (req, res) => {
-    try {
-      const { email, password, fullName, phone, role } = req.body;
-
-      // Validate required fields
-      if (!email || !password || !fullName || !phone || !role) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-
-      // Check if email already exists
-      const existing = await storage.getUserByEmail(email);
-      if (existing) {
-        return res.status(400).json({ message: "Email already registered" });
-      }
-
-      // Generate 6-digit OTP
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-      // Store signup data temporarily
-      const signupKey = `${email}:${Date.now()}`;
-      pendingSignups.set(signupKey, {
-        email,
-        password,
-        fullName,
-        phone,
-        role,
-        otp: code,
-        expiresAt,
-      });
-
-      // In production, send OTP via SMS using Twilio or similar
-      // For now, log it for testing
-      console.log(`OTP Code for ${phone}: ${code}`);
-
-      res.json({ 
-        message: "OTP sent successfully", 
-        expiresAt,
-        code // Remove in production
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/auth/signup-verify", async (req, res) => {
-    try {
-      const { email, password, fullName, phone, role, otpCode } = req.body;
-
-      if (!email || !otpCode) {
-        return res.status(400).json({ message: "Email and OTP code are required" });
-      }
-
-      // Find and validate the pending signup
-      let foundSignup = null;
-      let signupKey = "";
-      
-      for (const [key, signup] of Array.from(pendingSignups.entries())) {
-        if (signup.email === email && signup.otp === otpCode) {
-          // Check if OTP is not expired
-          if (new Date() > signup.expiresAt) {
-            pendingSignups.delete(key);
-            return res.status(400).json({ message: "OTP has expired" });
-          }
-          foundSignup = signup;
-          signupKey = key;
-          break;
-        }
-      }
-
-      if (!foundSignup) {
-        return res.status(400).json({ message: "Invalid OTP code" });
-      }
-
-      // Create user with hashed password
-      const hashedPassword = await bcrypt.hash(foundSignup.password, 10);
-
-      const user = await storage.createUser({
-        email: foundSignup.email,
-        password: hashedPassword,
-        fullName: foundSignup.fullName,
-        phone: foundSignup.phone,
-        role: foundSignup.role,
-        avatarUrl: undefined,
-      });
-
-      // Remove used signup from pending
-      pendingSignups.delete(signupKey);
-
-      // Create JWT token
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
-
-      res.json({
-        ...stripPassword(user),
-        token
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
 
   app.post("/api/auth/signup", async (req, res) => {
     try {
