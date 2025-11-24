@@ -25,18 +25,18 @@ if (typeof window !== 'undefined') {
   };
 
   // Suppress unhandledrejection for WebSocket errors
-  originalAddEventListener.call(window, 'unhandledrejection', (event: PromiseRejectionEvent) => {
+  originalAddEventListener.call(window, 'unhandledrejection', (event: any) => {
     const msg = String(event?.reason?.message || event?.reason || '');
     if (msg.includes('WebSocket') || msg.includes('localhost:undefined') || msg.includes('Failed to construct')) {
-      event.preventDefault();
+      event.preventDefault?.();
     }
   }, true);
 
   // Suppress error events for WebSocket
-  originalAddEventListener.call(window, 'error', (event: ErrorEvent) => {
+  originalAddEventListener.call(window, 'error', (event: any) => {
     const msg = String(event?.message || '').toLowerCase();
     if (msg.includes('websocket')) {
-      event.preventDefault();
+      event.preventDefault?.();
     }
   }, true);
 }
