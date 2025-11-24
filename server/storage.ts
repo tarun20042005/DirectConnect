@@ -87,8 +87,11 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = {
-      ...insertUser,
       id,
+      email: insertUser.email,
+      password: insertUser.password,
+      fullName: insertUser.fullName,
+      role: insertUser.role,
       phone: insertUser.phone || null,
       avatarUrl: insertUser.avatarUrl || null,
       verified: false,
@@ -139,8 +142,8 @@ export class MemStorage implements IStorage {
       zipCode: insertProperty.zipCode,
       latitude: insertProperty.latitude,
       longitude: insertProperty.longitude,
-      images: Array.isArray(insertProperty.images) ? insertProperty.images : [],
-      amenities: Array.isArray(insertProperty.amenities) ? insertProperty.amenities : [],
+      images: Array.isArray(insertProperty.images) ? (insertProperty.images as string[]) : [],
+      amenities: Array.isArray(insertProperty.amenities) ? (insertProperty.amenities as string[]) : [],
       virtualTourUrl: insertProperty.virtualTourUrl || null,
       available: true,
       views: 0,

@@ -192,6 +192,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Phone number required" });
       }
 
+      if (!req.userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
       // Generate 6-digit OTP
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -223,6 +227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { code } = req.body;
       if (!code) {
         return res.status(400).json({ message: "OTP code required" });
+      }
+
+      if (!req.userId) {
+        return res.status(401).json({ message: "User not authenticated" });
       }
 
       const verified = await storage.verifyOtp(req.userId, code);
@@ -337,8 +345,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Property ID and amount are required" });
       }
 
+      if (!req.userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
       const payment = await storage.createPayment({
-        tenantId: req.user.id,
+        tenantId: req.userId,
         propertyId,
         amount: parseFloat(amount),
         currency: "INR",
