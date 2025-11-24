@@ -8,8 +8,13 @@ import type { User, Chat } from "@shared/schema";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
-interface AuthRequest extends Express.Request {
-  user?: User;
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+      user?: User;
+    }
+  }
 }
 
 function stripPassword(user: User) {
@@ -18,8 +23,8 @@ function stripPassword(user: User) {
 }
 
 function authenticateToken(req: any, res: any, next: any) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const authHeader = req.headers?.['authorization'] as string | undefined;
+  const token = authHeader?.split(' ')?.[1];
 
   if (!token) {
     return res.status(401).json({ message: "Access token required" });

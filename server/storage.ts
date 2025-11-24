@@ -123,10 +123,24 @@ export class MemStorage implements IStorage {
   async createProperty(insertProperty: InsertProperty): Promise<Property> {
     const id = randomUUID();
     const property: Property = {
-      ...insertProperty,
       id,
-      sqft: insertProperty.sqft || null,
+      ownerId: insertProperty.ownerId,
+      title: insertProperty.title,
+      description: insertProperty.description,
+      propertyType: insertProperty.propertyType,
+      price: insertProperty.price,
       deposit: insertProperty.deposit || null,
+      bedrooms: insertProperty.bedrooms,
+      bathrooms: insertProperty.bathrooms,
+      sqft: insertProperty.sqft || null,
+      address: insertProperty.address,
+      city: insertProperty.city,
+      state: insertProperty.state,
+      zipCode: insertProperty.zipCode,
+      latitude: insertProperty.latitude,
+      longitude: insertProperty.longitude,
+      images: Array.isArray(insertProperty.images) ? insertProperty.images : [],
+      amenities: Array.isArray(insertProperty.amenities) ? insertProperty.amenities : [],
       virtualTourUrl: insertProperty.virtualTourUrl || null,
       available: true,
       views: 0,
@@ -213,8 +227,12 @@ export class MemStorage implements IStorage {
   async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
     const id = randomUUID();
     const appointment: Appointment = {
-      ...insertAppointment,
       id,
+      propertyId: insertAppointment.propertyId,
+      tenantId: insertAppointment.tenantId,
+      ownerId: insertAppointment.ownerId,
+      scheduledDate: insertAppointment.scheduledDate,
+      status: insertAppointment.status || "pending",
       message: insertAppointment.message || null,
       createdAt: new Date(),
     };
