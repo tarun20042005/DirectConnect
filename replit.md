@@ -10,30 +10,45 @@ The application is built as a full-stack TypeScript web application using React 
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes & Features (Session Nov 23, 2025)
+## Recent Changes & Features (Session Nov 24, 2025)
 
-### ✅ Completed Features
+### ✅ Completed Features (Latest Session)
 
-1. **South Indian Cultural Aesthetic**
-   - Updated hero background with traditional South Indian house image (red tile roof, white walls, wooden pillars)
-   - Design guidelines updated to reflect South Indian cultural elements
-   - Footer and overall design now aligned with Airbnb/Zillow aesthetic with local cultural touches
+1. **Tenant Browse & Save Properties Feature**
+   - Added "Browse Properties" tab in tenant dashboard showing all owner listings
+   - Implemented save/bookmark functionality with heart icon on property cards
+   - Tenants can toggle between saved and unsaved states
+   - Saved properties persist in database and display with red heart indicator
+   - "Saved Properties" tab shows all bookmarked properties by tenant
+   - One-click property viewing from Browse or Saved tabs
+   - Backend queries properly filter available properties and saved properties
 
-2. **User Profiles & Verification System**
+2. **Database Persistence**
+   - Switched from in-memory storage (MemStorage) to PostgreSQL database
+   - User accounts, properties, and saved preferences now persist across sessions
+   - All user data stored securely in Neon serverless PostgreSQL
+   - Database migrations applied successfully
+
+3. **Enhanced Tenant Dashboard**
+   - Multi-tab interface: "Saved Properties" | "Browse Properties" | "Appointments"
+   - Stats cards show saved property count and appointments
+   - Empty state messaging with actionable buttons
+   - Skeleton loading states for better UX
+   - Toast notifications for save/unsave actions
+
+## Previous Session Features (Nov 23, 2025)
+
+### ✅ User Profiles & Verification System
    - Created complete user profile pages displaying user information, verification status, and account details
    - Implemented `VerificationBadge` component showing green verified badge with shield icon
    - Owner profiles display their listed properties and member since date
    - Verification status clearly indicated on profiles with visual indicators
    - Clickable owner cards on property detail pages link to full user profiles
-   - Backend API endpoint `/api/users/:id` returns user data with password stripped
-   - Frontend route `/user/:userId` serves complete profile pages
-   - All user information properly typed with TypeScript
 
-3. **WebSocket HMR Error Suppression**
+### ✅ WebSocket HMR Error Suppression
    - Fixed critical Vite HMR WebSocket errors that were blocking app functionality
    - Errors with `localhost:undefined` port now suppressed at browser level
    - App no longer shows unhandled rejection errors to users
-   - Error handlers added at capture phase in main.tsx
 
 ### Features in Progress/Planned
 

@@ -1,17 +1,20 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, MessageSquare, Calendar, Heart, Plus, Eye, Edit, Trash2, Search } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { getAuthUser, isOwner } from "@/lib/auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Property, Appointment } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const user = getAuthUser();
 
   useEffect(() => {
@@ -27,6 +30,11 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: savedProperties = [], isLoading: loadingSavedProperties } = useQuery<Property[]>({
+    queryKey: ["/api/properties/saved", user?.id],
+    enabled: !isPropertyOwner && !!user,
+  });
+
   const { data: allProperties, isLoading: loadingAllProperties } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
     enabled: !isPropertyOwner && !!user,
@@ -35,6 +43,25 @@ export default function Dashboard() {
   const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments", user?.id],
     enabled: !!user,
+  });
+
+  const savePropertyMutation = useMutation({
+    mutationFn: async (propertyId: string) => {
+      if (!user) return;
+      const isSaved = savedProperties.some(p => p.id === propertyId);
+      if (isSaved) {
+        await apiRequest("DELETE", `/api/saved-properties/${user.id}/${propertyId}`);
+      } else {
+        await apiRequest("POST", "/api/saved-properties", { userId: user.id, propertyId });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
+      toast({ title: "Success", description: "Property saved successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
+    },
   });
 
   const stats = [
@@ -213,6 +240,8 @@ export default function Dashboard() {
                     key={property.id}
                     property={property}
                     onClick={() => setLocation(`/property/${property.id}`)}
+                    isSaved={savedProperties.some(p => p.id === property.id)}
+                    onSave={() => savePropertyMutation.mutate(property.id)}
                   />
                 ))}
               </div>
