@@ -118,6 +118,7 @@ export default function ListProperty() {
         sqft: data.sqft ? parseInt(data.sqft) : null,
         latitude: data.latitude || "40.7128",
         longitude: data.longitude || "-74.0060",
+        available: true,
       };
 
       await apiRequest<Property>("POST", "/api/properties", propertyData);

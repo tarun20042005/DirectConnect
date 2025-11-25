@@ -149,10 +149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/properties", authenticateToken, async (req, res) => {
     try {
-      // Ensure ownerId matches authenticated user
+      // Ensure ownerId matches authenticated user and available is true
       const propertyData = {
         ...req.body,
         ownerId: req.userId,
+        available: true,
       };
       const property = await storage.createProperty(propertyData);
       res.status(201).json(property);
