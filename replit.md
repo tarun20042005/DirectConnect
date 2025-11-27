@@ -10,6 +10,28 @@ The application is built as a full-stack TypeScript web application using React 
 
 Preferred communication style: Simple, everyday language.
 
+## Local Development Setup (Added Nov 27, 2025)
+
+DirectConnect Rentals is now ready to run locally on Windows with VS Code! 
+
+### Quick Start:
+```bash
+npm install
+copy .env.example .env
+# Edit .env with your Neon DATABASE_URL
+npm run db:push
+npm run dev
+# Open http://localhost:5000
+```
+
+**Full guide:** See `LOCAL_SETUP_GUIDE.md`
+
+### What Changed for Local Development:
+- Added `cross-env` for Windows-compatible scripts
+- Added `dotenv` for environment variable loading
+- Vite plugins automatically disable outside Replit (no manual changes needed!)
+- Scripts now work on Windows PowerShell and CMD
+
 ## Recent Changes & Features (Session Nov 24, 2025)
 
 ### ✅ Completed Features (Latest Session)
