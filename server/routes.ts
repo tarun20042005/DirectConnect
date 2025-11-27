@@ -326,6 +326,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/chats/owner/:ownerId", async (req, res) => {
+    try {
+      const chats = await storage.getChatsByOwner(req.params.ownerId);
+      res.json(chats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.delete("/api/saved-properties/:userId/:propertyId", authenticateToken, async (req, res) => {
     try {
       const deleted = await storage.deleteSavedProperty(req.params.userId, req.params.propertyId);

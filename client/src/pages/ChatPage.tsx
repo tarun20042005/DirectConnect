@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Send, ArrowLeft } from "lucide-react";
-import { useLocation } from "wouter";
 import { getAuthUser } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import type { Property, User, Message } from "@shared/schema";
 
 export default function ChatPage() {
   const { propertyId } = useParams();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const user = getAuthUser();
   const [message, setMessage] = useState("");
@@ -23,6 +22,15 @@ export default function ChatPage() {
   const [chatId, setChatId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+
+  // Extract chatId from URL query params for owners
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1] || '');
+    const urlChatId = params.get('chatId');
+    if (urlChatId) {
+      setChatId(urlChatId);
+    }
+  }, [location]);
 
   if (!user) {
     setLocation("/auth");

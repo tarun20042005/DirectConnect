@@ -9,7 +9,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Property, Appointment } from "@shared/schema";
+import type { Property, Appointment, Chat, User } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
@@ -45,6 +45,28 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: chats = [], isLoading: loadingChats } = useQuery<Chat[]>({
+    queryKey: ["/api/chats/owner", user?.id],
+    enabled: isPropertyOwner && !!user,
+  });
+
+  // Fetch tenant details for chats
+  const chatTenantIds = chats.map(c => c.tenantId);
+  const { data: chatUsers = {} } = useQuery({
+    queryKey: ["/api/chat-users", chatTenantIds],
+    queryFn: async () => {
+      const users: { [key: string]: User } = {};
+      for (const tenantId of chatTenantIds) {
+        const resp = await fetch(`/api/users/${tenantId}`);
+        if (resp.ok) {
+          users[tenantId] = await resp.json();
+        }
+      }
+      return users;
+    },
+    enabled: chatTenantIds.length > 0,
+  });
+
   const savePropertyMutation = useMutation({
     mutationFn: async (propertyId: string) => {
       if (!user) return;
@@ -73,7 +95,7 @@ export default function Dashboard() {
     },
     {
       title: isPropertyOwner ? "Active Inquiries" : "Messages",
-      value: 0,
+      value: isPropertyOwner ? chats.length : 0,
       icon: MessageSquare,
       color: "text-green-500",
     },
@@ -168,6 +190,12 @@ export default function Dashboard() {
               Browse Properties
             </TabsTrigger>
           )}
+          {isPropertyOwner && (
+            <TabsTrigger value="messages" data-testid="tab-messages">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Messages
+            </TabsTrigger>
+          )}
           <TabsTrigger value="appointments" data-testid="tab-appointments">
             Appointments
           </TabsTrigger>
@@ -241,6 +269,50 @@ export default function Dashboard() {
             </div>
           )}
         </TabsContent>
+
+        {isPropertyOwner && (
+          <TabsContent value="messages" className="mt-6">
+            {loadingChats ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20 w-full" />
+                ))}
+              </div>
+            ) : !chats || chats.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No messages yet</h3>
+                  <p className="text-muted-foreground text-center">Tenants will start conversations here</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {chats.map((chat) => {
+                  const tenant = chatUsers[chat.tenantId];
+                  return (
+                    <Card key={chat.id} className="hover-elevate cursor-pointer" onClick={() => setLocation(`/chat/${chat.propertyId}?chatId=${chat.id}`)} data-testid={`card-chat-${chat.id}`}>
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1 flex-1">
+                            <p className="font-semibold">{tenant?.fullName || "Unknown Tenant"}</p>
+                            <p className="text-sm text-muted-foreground">{tenant?.phone || "No phone"}</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Started {chat.createdAt ? new Date(chat.createdAt).toLocaleDateString() : 'Recently'}
+                            </p>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setLocation(`/chat/${chat.propertyId}?chatId=${chat.id}`); }} data-testid={`button-view-chat-${chat.id}`}>
+                            View Chat
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        )}
 
         {!isPropertyOwner && (
           <TabsContent value="available" className="mt-6">
