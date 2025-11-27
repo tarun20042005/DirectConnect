@@ -1,0 +1,56 @@
+I want this project to run perfectly on my local Windows machine using VS Code instead of Replit.
+
+Please update ALL required files so that the project works locally using:
+- Node.js LTS (v22)
+- npm
+- PostgreSQL Neon DB
+- VS Code terminal on Windows
+- NVM for Windows
+
+Make the following required changes:
+
+1. **Fix the package.json scripts for Windows**
+   - Replace every script using `NODE_ENV=...` with cross-platform syntax.
+   - Add `cross-env` to devDependencies and update scripts as:
+      "dev": "cross-env NODE_ENV=development tsx server/index-dev.ts"
+      "start": "cross-env NODE_ENV=production node dist/index.js"
+
+2. **Ensure environment variables load correctly**
+   - Update the project to use dotenv
+   - Add `import dotenv from "dotenv"; dotenv.config();` at the top of:
+       - server/index-dev.ts
+       - server/index-prod.ts
+       - any files using DATABASE_URL, SESSION_SECRET, etc.
+   - Confirm `.env` is read from the project root in VS Code.
+
+3. **Replace all Replit-only modules**
+   - Remove any Replit-specific code (e.g., cartographer, replit plugins, stripe-replit-sync)
+   - Replace with normal equivalents if needed.
+   - Ensure Vite, React, Express, Drizzle all run normally outside Replit.
+
+4. **Fix WebSocket and server hot reload behavior**
+   - Remove Replit preview server code
+   - Ensure Express + ws uses a standard `http.createServer(app)` setup
+   - Make sure Vite dev HMR works locally
+
+5. **Database configuration**
+   - Make sure Neon DB URL is read from `process.env.DATABASE_URL`
+   - Update drizzle config if needed
+   - Remove Replit-specific database wrappers
+
+6. **Command to push database**
+   - Ensure `npm run db:push` works using drizzle-kit locally
+
+7. **Client-side changes**
+   - Fix Vite config to use localhost and not Replit environment variables
+   - Remove Replit-only Vite plugins
+
+8. **Tell me exactly what files were modified and show me the updated code.**
+   - For each changed file: show BEFORE and AFTER
+   - Do NOT leave anything incomplete
+
+The final result should be a fully working full-stack application that I can run locally using:
+
+- `npm install`
+- `npm run dev`
+- open http://localhost:5000
