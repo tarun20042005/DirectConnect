@@ -152,6 +152,7 @@ export default function EditProperty() {
         sqft: data.sqft ? parseInt(data.sqft) : null,
         latitude: data.latitude || "40.7128",
         longitude: data.longitude || "-74.0060",
+        available: data.available ?? true,
       };
 
       await apiRequest<Property>("PUT", `/api/properties/${propertyId}`, propertyData);
