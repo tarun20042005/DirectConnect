@@ -69,7 +69,7 @@ export default function Dashboard() {
 
   const savePropertyMutation = useMutation({
     mutationFn: async (propertyId: string) => {
-      if (!user) return;
+      if (!user) throw new Error("Not logged in");
       const isSaved = savedProperties.some(p => p.id === propertyId);
       if (isSaved) {
         await apiRequest("DELETE", `/api/saved-properties/${user.id}/${propertyId}`);
@@ -78,10 +78,13 @@ export default function Dashboard() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ["/api/properties/saved"] });
+      }
       toast({ title: "Success", description: "Property saved successfully" });
     },
     onError: (error: any) => {
+      console.error("Save error:", error);
       toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
     },
   });
