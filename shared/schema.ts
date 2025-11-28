@@ -131,6 +131,8 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({
   id: true,
   createdAt: true,
+}).extend({
+  scheduledDate: z.union([z.date(), z.string()]).pipe(z.coerce.date()),
 });
 
 export const insertReviewSchema = createInsertSchema(reviews).omit({

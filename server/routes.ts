@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { User, Chat } from "@shared/schema";
+import { insertAppointmentSchema } from "@shared/schema";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
@@ -273,7 +274,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/appointments", authenticateToken, async (req, res) => {
     try {
-      const appointment = await storage.createAppointment(req.body);
+      const validated = insertAppointmentSchema.parse(req.body);
+      const appointment = await storage.createAppointment(validated);
       res.status(201).json(appointment);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
