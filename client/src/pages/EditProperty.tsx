@@ -293,8 +293,6 @@ export default function EditProperty() {
                             <SelectContent>
                               <SelectItem value="apartment">Apartment</SelectItem>
                               <SelectItem value="house">House</SelectItem>
-                              <SelectItem value="condo">Condo</SelectItem>
-                              <SelectItem value="studio">Studio</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
