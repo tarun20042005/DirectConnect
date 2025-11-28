@@ -57,7 +57,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProperty(property: InsertProperty): Promise<Property> {
-    const result = await db.insert(properties).values([property]).returning();
+    const result = await db.insert(properties).values(property as any).returning();
     return result[0];
   }
 
