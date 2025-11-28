@@ -28,6 +28,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async checkEmailExists(email: string): Promise<boolean> {
+    const result = await this.getUserByEmail(email);
+    return !!result;
+  }
+
   async createUser(user: InsertUser): Promise<User> {
     const result = await db.insert(users).values(user).returning();
     return result[0];
@@ -52,7 +57,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProperty(property: InsertProperty): Promise<Property> {
-    const result = await db.insert(properties).values(property).returning();
+    const result = await db.insert(properties).values([property]).returning();
     return result[0];
   }
 

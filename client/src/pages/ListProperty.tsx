@@ -47,7 +47,7 @@ export default function ListProperty() {
   const form = useForm<ListingForm>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
-      ownerId: user.id,
+      ownerId: user?.id || "",
       title: "",
       description: "",
       propertyType: "apartment",
@@ -125,7 +125,9 @@ export default function ListProperty() {
       
       // Invalidate property queries to refresh listings
       await queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/properties/owner", user.id] });
+      if (user?.id) {
+        await queryClient.invalidateQueries({ queryKey: ["/api/properties/owner", user.id] });
+      }
       
       toast({ title: "Success!", description: "Your property has been listed." });
       setLocation("/dashboard");
