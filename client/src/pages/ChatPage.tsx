@@ -19,16 +19,18 @@ export default function ChatPage() {
   const user = getAuthUser();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Extract chatId from URL query params for owners - sync, not state
-  const getChatIdFromUrl = () => {
+  // Extract chatId from URL query params for owners
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('chatId');
-  };
-  
-  const chatId = getChatIdFromUrl();
+    const urlChatId = params.get('chatId');
+    if (urlChatId) {
+      setChatId(urlChatId);
+    }
+  }, []);
 
   if (!user) {
     setLocation("/auth");
@@ -80,6 +82,9 @@ export default function ChatPage() {
         setMessages((prev) => [...prev, data.message]);
       } else if (data.type === "history") {
         setMessages(data.messages || []);
+        if (data.chatId && !chatId) {
+          setChatId(data.chatId);
+        }
       } else if (data.type === "error") {
         toast({ title: "Chat error", description: data.message, variant: "destructive" });
       }
@@ -99,7 +104,7 @@ export default function ChatPage() {
       console.error("WebSocket setup error:", error);
       toast({ title: "Connection error", description: "Failed to setup WebSocket", variant: "destructive" });
     }
-  }, [propertyId, user.id, user.token, location]);
+  }, [propertyId, user.id, user.token]);
 
   useEffect(() => {
     if (scrollRef.current) {
