@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, ArrowLeft } from "lucide-react";
-import { getAuthUser } from "@/lib/auth";
+import { Send, ArrowLeft, AlertCircle } from "lucide-react";
+import { getAuthUser, isOwner } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import type { Property, User, Message } from "@shared/schema";
 
@@ -80,9 +80,6 @@ export default function ChatPage() {
         setMessages((prev) => [...prev, data.message]);
       } else if (data.type === "history") {
         setMessages(data.messages || []);
-        if (data.chatId) {
-          setChatId(data.chatId);
-        }
       } else if (data.type === "error") {
         toast({ title: "Chat error", description: data.message, variant: "destructive" });
       }
@@ -129,6 +126,29 @@ export default function ChatPage() {
     .map(n => n[0])
     .join("")
     .toUpperCase() || "O";
+
+  // Check if owner is trying to access chat without chatId
+  const isPropertyOwner = isOwner(user);
+  const showOwnerError = isPropertyOwner && !chatId;
+
+  if (showOwnerError) {
+    return (
+      <div className="container mx-auto px-4 md:px-6 py-8 max-w-2xl">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="h-12 w-12 text-amber-600 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Access Chat from Messages</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              As a property owner, please access tenant messages from your Dashboard Messages tab to start chatting.
+            </p>
+            <Button onClick={() => setLocation("/dashboard")} data-testid="button-go-to-dashboard">
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-8 max-w-5xl">
