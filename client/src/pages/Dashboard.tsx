@@ -373,23 +373,24 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-4">
               {appointments.map((appointment) => (
-                <Card key={appointment.id} className="hover-elevate" data-testid={`card-appointment-${appointment.id}`}>
+                <Card key={appointment.id} className="hover-elevate cursor-pointer" onClick={() => setLocation(`/property/${appointment.propertyId}`)} data-testid={`card-appointment-${appointment.id}`}>
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start">
-                      <div className="space-y-1">
+                      <div className="space-y-1 flex-1">
                         <p className="font-semibold">Property Viewing</p>
                         <p className="text-sm text-muted-foreground">
                           {new Date(appointment.scheduledDate).toLocaleString()}
                         </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Status: <span className="font-medium capitalize">{appointment.status}</span>
+                        </p>
                         {appointment.message && (
-                          <p className="text-sm text-muted-foreground mt-2">{appointment.message}</p>
+                          <p className="text-sm text-muted-foreground mt-2 italic">"{appointment.message}"</p>
                         )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" data-testid={`button-view-appointment-${appointment.id}`}>
-                          View Details
-                        </Button>
-                      </div>
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setLocation(`/property/${appointment.propertyId}`); }} data-testid={`button-view-appointment-${appointment.id}`}>
+                        View Details
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
