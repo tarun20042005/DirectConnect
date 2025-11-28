@@ -19,18 +19,16 @@ export default function ChatPage() {
   const user = getAuthUser();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chatId, setChatId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Extract chatId from URL query params for owners
-  useEffect(() => {
+  // Extract chatId from URL query params for owners - sync, not state
+  const getChatIdFromUrl = () => {
     const params = new URLSearchParams(location.split('?')[1] || '');
-    const urlChatId = params.get('chatId');
-    if (urlChatId) {
-      setChatId(urlChatId);
-    }
-  }, [location]);
+    return params.get('chatId');
+  };
+  
+  const chatId = getChatIdFromUrl();
 
   if (!user) {
     setLocation("/auth");
@@ -104,7 +102,7 @@ export default function ChatPage() {
       console.error("WebSocket setup error:", error);
       toast({ title: "Connection error", description: "Failed to setup WebSocket", variant: "destructive" });
     }
-  }, [propertyId, user.id, user.token, chatId]);
+  }, [propertyId, user.id, user.token, location]);
 
   useEffect(() => {
     if (scrollRef.current) {
