@@ -113,6 +113,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(appointments.tenantId, userId));
   }
 
+  async getAppointmentsByOwner(ownerId: string): Promise<Appointment[]> {
+    return await db.select().from(appointments)
+      .where(eq(appointments.ownerId, ownerId));
+  }
+
   async getAppointmentsByProperty(propertyId: string): Promise<Appointment[]> {
     return await db.select().from(appointments).where(eq(appointments.propertyId, propertyId));
   }

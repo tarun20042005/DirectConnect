@@ -34,6 +34,7 @@ export interface IStorage {
   
   getAppointment(id: string): Promise<Appointment | undefined>;
   getAppointmentsByUser(userId: string): Promise<Appointment[]>;
+  getAppointmentsByOwner(ownerId: string): Promise<Appointment[]>;
   getAppointmentsByProperty(propertyId: string): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: string, appointment: Partial<Appointment>): Promise<Appointment | undefined>;
@@ -229,7 +230,13 @@ export class MemStorage implements IStorage {
 
   async getAppointmentsByUser(userId: string): Promise<Appointment[]> {
     return Array.from(this.appointments.values()).filter(
-      (appointment) => appointment.tenantId === userId || appointment.ownerId === userId,
+      (appointment) => appointment.tenantId === userId,
+    );
+  }
+
+  async getAppointmentsByOwner(ownerId: string): Promise<Appointment[]> {
+    return Array.from(this.appointments.values()).filter(
+      (appointment) => appointment.ownerId === ownerId,
     );
   }
 

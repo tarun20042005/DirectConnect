@@ -41,7 +41,7 @@ export default function Dashboard() {
   });
 
   const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({
-    queryKey: ["/api/appointments", user?.id],
+    queryKey: isPropertyOwner ? ["/api/appointments/owner", user?.id] : ["/api/appointments", user?.id],
     enabled: !!user,
   });
 

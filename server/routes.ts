@@ -272,6 +272,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/appointments/owner/:ownerId", async (req, res) => {
+    try {
+      const appointments = await storage.getAppointmentsByOwner(req.params.ownerId);
+      res.json(appointments);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/appointments", authenticateToken, async (req, res) => {
     try {
       const validated = insertAppointmentSchema.parse(req.body);
