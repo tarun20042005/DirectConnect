@@ -24,7 +24,7 @@ export default function ChatPage() {
 
   // Extract chatId from URL query params for owners - sync, not state
   const getChatIdFromUrl = () => {
-    const params = new URLSearchParams(location.split('?')[1] || '');
+    const params = new URLSearchParams(window.location.search);
     return params.get('chatId');
   };
   
