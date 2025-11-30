@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
-import { Image as ImageIcon, X, MapPin } from "lucide-react";
+import { Image as ImageIcon, X, MapPin, Check } from "lucide-react";
 import livingRoomImage from "@assets/generated_images/living_room_property_listing.png";
 import kitchenImage from "@assets/generated_images/modern_kitchen_interior.png";
 import bedroomImage from "@assets/generated_images/bedroom_interior_photography.png";
@@ -29,6 +29,13 @@ const listingSchema = insertPropertySchema.extend({
 type ListingForm = z.infer<typeof listingSchema>;
 
 const indianStates = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi"];
+
+const steps = [
+  { number: 1, title: "Basic Info", description: "Property details" },
+  { number: 2, title: "Location", description: "Find on map" },
+  { number: 3, title: "Images & Amenities", description: "Photos & features" },
+  { number: 4, title: "Review", description: "Publish listing" },
+];
 
 export default function ListProperty() {
   const [, setLocation] = useLocation();
@@ -122,7 +129,6 @@ export default function ListProperty() {
       setIsLoading(true);
       const fullAddress = `${address}, ${city}, ${state}, India`;
       
-      // Use OpenStreetMap Nominatim for free geocoding
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`
       );
@@ -175,7 +181,6 @@ export default function ListProperty() {
 
       await apiRequest<Property>("POST", "/api/properties", propertyData);
       
-      // Invalidate property queries to refresh listings
       await queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       if (user?.id) {
         await queryClient.invalidateQueries({ queryKey: ["/api/properties/owner", user.id] });
@@ -195,455 +200,542 @@ export default function ListProperty() {
   };
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-8 max-w-4xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-3xl">List Your Property</CardTitle>
-          <CardDescription>Fill in the details to create your listing</CardDescription>
-          <Progress value={progress} className="mt-4" />
-          <div className="flex justify-between text-sm text-muted-foreground mt-2">
-            <span>Step {currentStep} of 4</span>
-            <span>{Math.round(progress)}% Complete</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              {currentStep === 1 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold">Property Details</h3>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-bold mb-2">List Your Property</h1>
+          <p className="text-lg text-muted-foreground">Connect directly with tenants. No broker fees.</p>
+        </div>
 
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Property Title</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Modern 2-bedroom apartment in downtown"
-                            data-testid="input-property-title"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe your property, its features, and what makes it special..."
-                            rows={6}
-                            data-testid="input-property-description"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="propertyType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Property Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-property-type">
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="apartment">Apartment</SelectItem>
-                              <SelectItem value="house">House</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="sqft"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Square Feet (Optional)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="1200"
-                              data-testid="input-sqft"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="bedrooms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bedrooms</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              data-testid="input-bedrooms"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="bathrooms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bathrooms</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              data-testid="input-bathrooms"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Monthly Rent (₹)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="50000"
-                              data-testid="input-price"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="deposit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Deposit (₹)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="100000"
-                              data-testid="input-deposit"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+        {/* Progress Indicator */}
+        <div className="mb-12">
+          <div className="flex justify-between mb-8">
+            {steps.map((step) => (
+              <div key={step.number} className="flex flex-col items-center flex-1">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold mb-2 transition-all ${
+                    currentStep >= step.number
+                      ? "bg-primary text-primary-foreground shadow-lg"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {currentStep > step.number ? <Check className="w-5 h-5" /> : step.number}
                 </div>
-              )}
-
-              {currentStep === 2 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold">Location</h3>
-
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Street Address</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="123 Main Street"
-                            data-testid="input-address"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Bangalore, Mumbai, Delhi" data-testid="input-city" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-state">
-                                <SelectValue placeholder="Select State" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {indianStates.map(state => (
-                                <SelectItem key={state} value={state}>{state}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="zipCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>PIN Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="560001" data-testid="input-zipcode" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    onClick={handleFindLocation}
-                    disabled={isLoading}
-                    className="w-full"
-                    data-testid="button-find-location"
-                  >
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Find Location on Map
-                  </Button>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-                    <FormField
-                      control={form.control}
-                      name="latitude"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm">Latitude</FormLabel>
-                          <FormControl>
-                            <Input placeholder="12.9716" data-testid="input-latitude" {...field} readOnly className="bg-background" />
-                          </FormControl>
-                          <FormDescription className="text-xs">Auto-filled by location search</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="longitude"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm">Longitude</FormLabel>
-                          <FormControl>
-                            <Input placeholder="77.5946" data-testid="input-longitude" {...field} readOnly className="bg-background" />
-                          </FormControl>
-                          <FormDescription>Will use Bangalore coordinates if not provided</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 3 && (
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold">Property Images</h3>
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted-foreground rounded-lg p-6 text-center cursor-pointer hover:border-primary transition">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
-                        data-testid="input-image-upload"
-                      />
-                      <label htmlFor="image-upload" className="cursor-pointer block">
-                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="font-semibold">Click to upload property images</p>
-                        <p className="text-sm text-muted-foreground">PNG, JPG, GIF up to 10MB each</p>
-                      </label>
-                    </div>
-
-                    {uploadedImages.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {uploadedImages.map((img, idx) => (
-                          <div key={idx} className="relative group">
-                            <img
-                              src={img}
-                              alt={`Property ${idx + 1}`}
-                              className="w-full h-32 object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeImage(idx)}
-                              className="absolute top-1 right-1 bg-destructive text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
-                              data-testid={`button-remove-image-${idx}`}
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="border-t pt-6">
-                    <h3 className="text-xl font-semibold">Amenities</h3>
-
-                  <FormField
-                    control={form.control}
-                    name="amenities"
-                    render={() => (
-                      <FormItem>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {amenitiesOptions.map((amenity) => (
-                            <FormField
-                              key={amenity}
-                              control={form.control}
-                              name="amenities"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(amenity)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value, amenity])
-                                            : field.onChange(
-                                                field.value?.filter((value) => value !== amenity)
-                                              );
-                                        }}
-                                        data-testid={`checkbox-amenity-${amenity.toLowerCase().replace(/\s+/g, '-')}`}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal cursor-pointer">
-                                      {amenity}
-                                    </FormLabel>
-                                  </FormItem>
-                                );
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 4 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold">Review & Publish</h3>
-                  <p className="text-muted-foreground">
-                    Review your listing details before publishing. You can edit it anytime from your dashboard.
-                  </p>
-
-                  <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                    <p><strong>Title:</strong> {form.watch("title")}</p>
-                    <p><strong>Type:</strong> {form.watch("propertyType")}</p>
-                    <p><strong>Location:</strong> {form.watch("city")}, {form.watch("state")}</p>
-                    <p><strong>Rent:</strong> ₹{form.watch("price")}/month</p>
-                    <p><strong>Bedrooms:</strong> {form.watch("bedrooms")} | <strong>Bathrooms:</strong> {form.watch("bathrooms")}</p>
-                    <p><strong>Images:</strong> {uploadedImages.length} uploaded</p>
-                    {form.watch("amenities") && form.watch("amenities").length > 0 && (
-                      <p><strong>Amenities:</strong> {form.watch("amenities").join(", ")}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-between pt-6">
-                {currentStep > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setCurrentStep(currentStep - 1)}
-                    data-testid="button-back"
-                  >
-                    Back
-                  </Button>
-                )}
-
-                {currentStep < 4 ? (
-                  <Button
-                    type="button"
-                    onClick={() => setCurrentStep(currentStep + 1)}
-                    className={currentStep === 1 ? "ml-auto" : ""}
-                    data-testid="button-next"
-                  >
-                    Next
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="ml-auto"
-                    data-testid="button-publish"
-                  >
-                    {isLoading ? "Publishing..." : "Publish Listing"}
-                  </Button>
-                )}
+                <p className="text-sm font-medium text-center">{step.title}</p>
+                <p className="text-xs text-muted-foreground text-center">{step.description}</p>
               </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            ))}
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+
+        {/* Form Card */}
+        <Card className="shadow-xl border-0">
+          <CardContent className="p-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+                {/* Step 1: Basic Info */}
+                {currentStep === 1 && (
+                  <div className="space-y-8">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-6">Property Details</h3>
+                      
+                      <div className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-base">Property Title</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g., Modern 2BHK Apartment in Downtown"
+                                  className="h-11"
+                                  data-testid="input-title"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormDescription>Give your property a catchy title</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-base">Description</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Describe your property, its features, and what makes it special..."
+                                  rows={5}
+                                  data-testid="input-property-description"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormDescription>Help tenants understand your property better</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Grid for Property Type and Size */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="propertyType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">Property Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-11" data-testid="select-property-type">
+                                      <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="apartment">Apartment</SelectItem>
+                                    <SelectItem value="house">House</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="sqft"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">Square Feet (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="1200"
+                                    className="h-11"
+                                    data-testid="input-sqft"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Grid for Rooms and Pricing */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="bedrooms"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">Bedrooms</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    className="h-11"
+                                    data-testid="input-bedrooms"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="bathrooms"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">Bathrooms</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    className="h-11"
+                                    data-testid="input-bathrooms"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="price"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">Monthly Rent (₹)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="50000"
+                                    className="h-11"
+                                    data-testid="input-price"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="deposit"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">Deposit (₹)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="100000"
+                                    className="h-11"
+                                    data-testid="input-deposit"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Location */}
+                {currentStep === 2 && (
+                  <div className="space-y-8">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-6">Property Location</h3>
+                      
+                      <div className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-base">Street Address</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="123 Main Street, Apartment 4B"
+                                  className="h-11"
+                                  data-testid="input-address"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">City</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Bangalore, Mumbai, Delhi" className="h-11" data-testid="input-city" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="state"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">State</FormLabel>
+                                <Select value={field.value || ""} onValueChange={field.onChange}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-11" data-testid="select-state">
+                                      <SelectValue placeholder="Select State" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {indianStates.map(state => (
+                                      <SelectItem key={state} value={state}>{state}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="zipCode"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-base">PIN Code</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="560001" className="h-11" data-testid="input-zipcode" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          onClick={handleFindLocation}
+                          disabled={isLoading}
+                          className="w-full h-11 text-base"
+                          data-testid="button-find-location"
+                        >
+                          <MapPin className="h-5 w-5 mr-2" />
+                          Find Exact Location on Map
+                        </Button>
+
+                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="latitude"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm">Latitude</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="12.9716" className="h-11 bg-white dark:bg-slate-950" data-testid="input-latitude" {...field} readOnly />
+                                  </FormControl>
+                                  <FormDescription className="text-xs">Auto-filled by location search</FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="longitude"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm">Longitude</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="77.5946" className="h-11 bg-white dark:bg-slate-950" data-testid="input-longitude" {...field} readOnly />
+                                  </FormControl>
+                                  <FormDescription className="text-xs">Auto-filled by location search</FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Images & Amenities */}
+                {currentStep === 3 && (
+                  <div className="space-y-8">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-6">Photos & Amenities</h3>
+                      
+                      <div className="space-y-6">
+                        <div>
+                          <FormLabel className="text-base mb-3 block">Property Images</FormLabel>
+                          <div className="border-2 border-dashed border-muted-foreground rounded-lg p-8 text-center cursor-pointer hover:border-primary transition bg-muted/30">
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              className="hidden"
+                              id="image-upload"
+                              data-testid="input-image-upload"
+                            />
+                            <label htmlFor="image-upload" className="cursor-pointer block">
+                              <ImageIcon className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+                              <p className="font-semibold">Click to upload property images</p>
+                              <p className="text-sm text-muted-foreground mt-1">PNG, JPG, GIF up to 10MB each</p>
+                            </label>
+                          </div>
+
+                          {uploadedImages.length > 0 && (
+                            <div className="mt-6">
+                              <p className="text-sm font-semibold mb-3">{uploadedImages.length} image(s) uploaded</p>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {uploadedImages.map((img, idx) => (
+                                  <div key={idx} className="relative group">
+                                    <img
+                                      src={img}
+                                      alt={`Property ${idx + 1}`}
+                                      className="w-full h-40 object-cover rounded-lg"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => removeImage(idx)}
+                                      className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded opacity-0 group-hover:opacity-100 transition"
+                                      data-testid={`button-remove-image-${idx}`}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="border-t pt-8">
+                          <FormLabel className="text-base mb-4 block">Amenities</FormLabel>
+                          <FormField
+                            control={form.control}
+                            name="amenities"
+                            render={() => (
+                              <FormItem>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                  {amenitiesOptions.map((amenity) => (
+                                    <FormField
+                                      key={amenity}
+                                      control={form.control}
+                                      name="amenities"
+                                      render={({ field }) => {
+                                        return (
+                                          <FormItem className="flex items-center space-x-2 space-y-0">
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(amenity)}
+                                                onCheckedChange={(checked) => {
+                                                  return checked
+                                                    ? field.onChange([...field.value, amenity])
+                                                    : field.onChange(
+                                                        field.value?.filter((value) => value !== amenity)
+                                                      );
+                                                }}
+                                                data-testid={`checkbox-amenity-${amenity.toLowerCase().replace(/\s+/g, '-')}`}
+                                              />
+                                            </FormControl>
+                                            <FormLabel className="font-normal cursor-pointer text-sm">
+                                              {amenity}
+                                            </FormLabel>
+                                          </FormItem>
+                                        );
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4: Review */}
+                {currentStep === 4 && (
+                  <div className="space-y-8">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">Review & Publish</h3>
+                      <p className="text-muted-foreground mb-6">Review your listing details before publishing. You can edit it anytime from your dashboard.</p>
+                      
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Title</p>
+                            <p className="font-semibold text-lg">{form.watch("title")}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Property Type</p>
+                            <p className="font-semibold text-lg capitalize">{form.watch("propertyType")}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Location</p>
+                            <p className="font-semibold">{form.watch("city")}, {form.watch("state")}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Monthly Rent</p>
+                            <p className="font-semibold text-lg">₹{form.watch("price")}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Bedrooms & Bathrooms</p>
+                            <p className="font-semibold">{form.watch("bedrooms")} BHK | {form.watch("bathrooms")} Baths</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Images</p>
+                            <p className="font-semibold">{uploadedImages.length} uploaded</p>
+                          </div>
+                        </div>
+                        
+                        {form.watch("amenities") && form.watch("amenities").length > 0 && (
+                          <div className="pt-4 border-t border-blue-300 dark:border-blue-700">
+                            <p className="text-sm text-muted-foreground mb-2">Amenities</p>
+                            <div className="flex flex-wrap gap-2">
+                              {form.watch("amenities").map((amenity) => (
+                                <span key={amenity} className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-full text-sm font-medium">
+                                  {amenity}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Navigation Buttons */}
+                <div className="flex justify-between gap-4 pt-8 border-t">
+                  {currentStep > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep(currentStep - 1)}
+                      className="h-11 px-8"
+                      data-testid="button-back"
+                    >
+                      Back
+                    </Button>
+                  )}
+                  <div className="flex-1" />
+                  {currentStep < 4 ? (
+                    <Button
+                      type="button"
+                      onClick={() => setCurrentStep(currentStep + 1)}
+                      className="h-11 px-8 text-base"
+                      data-testid="button-next"
+                    >
+                      Next
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="h-11 px-8 text-base"
+                      data-testid="button-publish"
+                    >
+                      {isLoading ? "Publishing..." : "Publish Listing"}
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

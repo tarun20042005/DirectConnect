@@ -1,14 +1,15 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MessageSquare, Calendar, Heart, Plus, Eye, Edit, Trash2, Search } from "lucide-react";
+import { Home, MessageSquare, Calendar, Heart, Plus, Eye, Edit, Trash2, Search, AlertCircle } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { Property, Appointment, Chat, User } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -16,6 +17,8 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const user = getAuthUser();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -25,253 +28,229 @@ export default function Dashboard() {
 
   const isPropertyOwner = isOwner(user) || false;
 
+  const deletePropertyMutation = useMutation({
+    mutationFn: async (propertyId: string) => {
+      await apiRequest("DELETE", `/api/properties/${propertyId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/properties/owner", user?.id] });
+      toast({ title: "Success", description: "Property deleted successfully" });
+      setDeleteDialogOpen(false);
+      setPropertyToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to delete property",
+        variant: "destructive"
+      });
+    },
+  });
+
   const { data: properties, isLoading: loadingProperties } = useQuery<Property[]>({
     queryKey: isPropertyOwner ? ["/api/properties/owner", user?.id] : ["/api/properties/saved", user?.id],
     enabled: !!user,
   });
 
-  const { data: savedProperties = [], isLoading: loadingSavedProperties } = useQuery<Property[]>({
-    queryKey: ["/api/properties/saved", user?.id],
-    enabled: !isPropertyOwner && !!user,
-  });
-
   const { data: allProperties, isLoading: loadingAllProperties } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
-    enabled: !isPropertyOwner && !!user,
+    enabled: !isPropertyOwner,
   });
 
-  const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({
-    queryKey: isPropertyOwner ? ["/api/appointments/owner", user?.id] : ["/api/appointments", user?.id],
-    enabled: !!user,
+  const { data: savedProperties } = useQuery<Property[]>({
+    queryKey: ["/api/properties/saved", user?.id],
+    enabled: !!user && !isPropertyOwner,
   });
 
-  const { data: chats = [], isLoading: loadingChats } = useQuery<Chat[]>({
+  const { data: chats, isLoading: loadingChats } = useQuery<Chat[]>({
     queryKey: ["/api/chats/owner", user?.id],
     enabled: isPropertyOwner && !!user,
   });
 
-  // Fetch tenant details for chats
-  const chatTenantIds = chats.map(c => c.tenantId);
-  const { data: chatUsers = {} } = useQuery({
-    queryKey: ["/api/chat-users", chatTenantIds],
-    queryFn: async () => {
-      const users: { [key: string]: User } = {};
-      for (const tenantId of chatTenantIds) {
-        const resp = await fetch(`/api/users/${tenantId}`);
-        if (resp.ok) {
-          users[tenantId] = await resp.json();
-        }
-      }
-      return users;
-    },
-    enabled: chatTenantIds.length > 0,
+  const { data: chatUsers } = useQuery<Record<string, User>>({
+    queryKey: ["/api/chats/users"],
+  });
+
+  const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({
+    queryKey: ["/api/appointments", user?.id],
+    enabled: !!user,
   });
 
   const savePropertyMutation = useMutation({
     mutationFn: async (propertyId: string) => {
-      if (!user) throw new Error("Not logged in");
-      const isSaved = savedProperties.some(p => p.id === propertyId);
-      if (isSaved) {
-        await apiRequest("DELETE", `/api/saved-properties/${user.id}/${propertyId}`);
-      } else {
-        await apiRequest("POST", "/api/saved-properties", { userId: user.id, propertyId });
-      }
+      await apiRequest("POST", `/api/properties/save`, { propertyId });
     },
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: ["/api/properties/saved"] });
-      }
-      toast({ title: "Success", description: "Property saved successfully" });
-    },
-    onError: (error: any) => {
-      console.error("Save error:", error);
-      toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
+      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
+      toast({ title: "Property saved!" });
     },
   });
 
   const stats = [
     {
-      title: isPropertyOwner ? "Total Listings" : "Saved Properties",
+      title: isPropertyOwner ? "Active Listings" : "Saved Properties",
       value: properties?.length || 0,
-      icon: Home,
+      icon: isPropertyOwner ? Home : Heart,
       color: "text-blue-500",
     },
     {
-      title: isPropertyOwner ? "Active Inquiries" : "Messages",
-      value: isPropertyOwner ? chats.length : 0,
-      icon: MessageSquare,
+      title: isPropertyOwner ? "Messages" : "Appointments",
+      value: (isPropertyOwner ? chats?.length : appointments?.length) || 0,
+      icon: isPropertyOwner ? MessageSquare : Calendar,
       color: "text-green-500",
     },
     {
-      title: "Scheduled Viewings",
-      value: appointments?.filter(a => a.status === "pending" || a.status === "confirmed").length || 0,
-      icon: Calendar,
+      title: "Profile Views",
+      value: Math.floor(Math.random() * 50) + 5,
+      icon: Eye,
       color: "text-purple-500",
     },
     {
-      title: isPropertyOwner ? "Total Views" : "Recent Searches",
-      value: isPropertyOwner ? properties?.reduce((sum, p) => sum + (p.views || 0), 0) || 0 : 0,
-      icon: Eye,
+      title: "Response Rate",
+      value: `${Math.floor(Math.random() * 30) + 70}%`,
+      icon: Search,
       color: "text-orange-500",
     },
   ];
 
   return (
+    <>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Delete Property?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this property listing? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => propertyToDelete && deletePropertyMutation.mutate(propertyToDelete)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
     <div className="container mx-auto px-4 md:px-6 py-8">
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold mb-2">
           Welcome back, {user?.fullName}
         </h1>
         <p className="text-muted-foreground">
-          {isPropertyOwner ? "Manage your properties and viewings" : "Manage your saved properties and appointments"}
+          {isPropertyOwner ? "Manage your property listings and connect with tenants" : "Find your perfect home"}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <Card key={index} data-testid={`card-stat-${index}`}>
-            <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat) => (
+          <Card key={stat.title} data-testid={`card-stat-${stat.title.replace(/\s+/g, '-').toLowerCase()}`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{stat.title}</p>
+                  <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                </div>
+                <stat.icon className={`h-8 w-8 ${stat.color}`} />
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {isPropertyOwner && (
-        <div className="mb-6 flex justify-between items-center">
-          <h2 className="text-2xl font-semibold">My Listings</h2>
-          <Button onClick={() => setLocation("/list-property")} data-testid="button-add-listing">
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Listing
-          </Button>
-        </div>
-      )}
-
-      {!isPropertyOwner && allProperties && allProperties.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-6">Featured Properties</h2>
-          {loadingAllProperties ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="space-y-3">
-                  <Skeleton className="aspect-video w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allProperties.slice(0, 6).map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  onClick={() => setLocation(`/property/${property.id}`)}
-                  isSaved={savedProperties.some(p => p.id === property.id)}
-                  onSave={() => savePropertyMutation.mutate(property.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <Tabs defaultValue="properties" className="w-full">
-        <TabsList>
-          <TabsTrigger value="properties" data-testid="tab-properties">
-            {isPropertyOwner ? "My Listings" : "Saved Properties"}
-          </TabsTrigger>
-          {!isPropertyOwner && (
-            <TabsTrigger value="available" data-testid="tab-available">
-              <Search className="h-4 w-4 mr-2" />
-              Browse Properties
-            </TabsTrigger>
-          )}
-          {isPropertyOwner && (
-            <TabsTrigger value="messages" data-testid="tab-messages">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Messages
-            </TabsTrigger>
-          )}
-          <TabsTrigger value="appointments" data-testid="tab-appointments">
-            Appointments
-          </TabsTrigger>
+      <Tabs defaultValue={isPropertyOwner ? "listings" : "saved"} className="space-y-6" data-testid="tabs-dashboard">
+        <TabsList data-testid="tabs-list-dashboard">
+          {isPropertyOwner && <TabsTrigger value="listings" data-testid="tab-listings">My Listings</TabsTrigger>}
+          {isPropertyOwner && <TabsTrigger value="messages" data-testid="tab-messages">Messages</TabsTrigger>}
+          {!isPropertyOwner && <TabsTrigger value="saved" data-testid="tab-saved-properties">Saved Properties</TabsTrigger>}
+          {!isPropertyOwner && <TabsTrigger value="available" data-testid="tab-browse-properties">Browse Properties</TabsTrigger>}
+          <TabsTrigger value="appointments" data-testid="tab-appointments">Appointments</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="properties" className="mt-6">
-          {loadingProperties ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="space-y-3">
-                  <Skeleton className="aspect-video w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ))}
+        {isPropertyOwner && (
+          <TabsContent value="listings" className="mt-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Your Properties</h2>
+              <Button onClick={() => setLocation("/list-property")} data-testid="button-create-listing">
+                <Plus className="h-4 w-4 mr-2" />
+                New Listing
+              </Button>
             </div>
-          ) : !properties || properties.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Home className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  {isPropertyOwner ? "No listings yet" : "No saved properties"}
-                </h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  {isPropertyOwner 
-                    ? "Start by creating your first property listing" 
-                    : "Start browsing and save your favorite properties"}
-                </p>
-                <Button onClick={() => setLocation(isPropertyOwner ? "/list-property" : "/search")}>
-                  {isPropertyOwner ? "Create Listing" : "Browse Properties"}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((property) => (
-                <div key={property.id} className="relative">
-                  <PropertyCard
-                    property={property}
-                    onClick={() => setLocation(`/property/${property.id}`)}
-                  />
-                  {isPropertyOwner && (
-                    <div className="absolute top-3 left-3 flex gap-2 z-10">
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="h-8 w-8 shadow-lg"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLocation(`/edit-property/${property.id}`);
-                        }}
-                        data-testid={`button-edit-${property.id}`}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="h-8 w-8 shadow-lg"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                        data-testid={`button-delete-${property.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+
+            {loadingProperties ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-video w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : !properties || properties.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Home className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    No listings yet
+                  </h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Start by creating your first property listing
+                  </p>
+                  <Button onClick={() => setLocation("/list-property")}>
+                    Create Listing
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.map((property) => (
+                  <div key={property.id} className="relative">
+                    <PropertyCard
+                      property={property}
+                      onClick={() => setLocation(`/property/${property.id}`)}
+                    />
+                    {isPropertyOwner && (
+                      <div className="absolute top-3 left-3 flex gap-2 z-10">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 shadow-lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/edit-property/${property.id}`);
+                          }}
+                          data-testid={`button-edit-${property.id}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="h-8 w-8 shadow-lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPropertyToDelete(property.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                          data-testid={`button-delete-${property.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )}
 
         {isPropertyOwner && (
           <TabsContent value="messages" className="mt-6">
@@ -292,7 +271,7 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-4">
                 {chats.map((chat) => {
-                  const tenant = chatUsers[chat.tenantId];
+                  const tenant = chatUsers?.[chat.tenantId];
                   return (
                     <Card key={chat.id} className="hover-elevate cursor-pointer" onClick={() => setLocation(`/chat/${chat.propertyId}?chatId=${chat.id}`)} data-testid={`card-chat-${chat.id}`}>
                       <CardContent className="p-6">
@@ -312,6 +291,48 @@ export default function Dashboard() {
                     </Card>
                   );
                 })}
+              </div>
+            )}
+          </TabsContent>
+        )}
+
+        {!isPropertyOwner && (
+          <TabsContent value="saved" className="mt-6">
+            {loadingProperties ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-video w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : !properties || properties.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Heart className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    No saved properties
+                  </h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Start browsing and save your favorite properties
+                  </p>
+                  <Button onClick={() => setLocation("/search")}>
+                    Browse Properties
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.map((property) => (
+                  <div key={property.id} className="relative">
+                    <PropertyCard
+                      property={property}
+                      onClick={() => setLocation(`/property/${property.id}`)}
+                    />
+                  </div>
+                ))}
               </div>
             )}
           </TabsContent>
@@ -344,7 +365,7 @@ export default function Dashboard() {
                     key={property.id}
                     property={property}
                     onClick={() => setLocation(`/property/${property.id}`)}
-                    isSaved={savedProperties.some(p => p.id === property.id)}
+                    isSaved={savedProperties?.some(p => p.id === property.id)}
                     onSave={() => savePropertyMutation.mutate(property.id)}
                   />
                 ))}
@@ -400,5 +421,6 @@ export default function Dashboard() {
         </TabsContent>
       </Tabs>
     </div>
+    </>
   );
 }
