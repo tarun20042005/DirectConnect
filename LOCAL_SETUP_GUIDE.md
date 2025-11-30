@@ -155,6 +155,25 @@ del package-lock.json
 npm install
 ```
 
+### Seeing Replit Symbols/Branding on localhost?
+
+If you see a Replit dev banner or other Replit UI elements when running on localhost:
+
+1. Make sure your `.env` file does **NOT** contain `REPL_ID`
+2. Clear Node environment variables:
+```powershell
+# In PowerShell, check if REPL_ID is set
+$env:REPL_ID
+
+# If it shows a value, remove it
+Remove-Item env:REPL_ID
+```
+
+3. Stop the dev server (Ctrl+C)
+4. Start it again: `npm run dev`
+
+The Replit plugins only load when `REPL_ID` environment variable exists. When running locally, this variable should NOT be set.
+
 ### Vite HMR Errors (wss://localhost:undefined)
 
 These are normal development warnings and don't affect functionality. The app will still work.
