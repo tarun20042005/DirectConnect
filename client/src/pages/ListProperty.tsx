@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, MapPin } from "lucide-react";
 import livingRoomImage from "@assets/generated_images/living_room_property_listing.png";
 import kitchenImage from "@assets/generated_images/modern_kitchen_interior.png";
 import bedroomImage from "@assets/generated_images/bedroom_interior_photography.png";
@@ -107,6 +107,58 @@ export default function ListProperty() {
   ];
 
   const progress = (currentStep / 4) * 100;
+
+  const handleFindLocation = async () => {
+    const address = form.getValues("address");
+    const city = form.getValues("city");
+    const state = form.getValues("state");
+
+    if (!address || !city) {
+      toast({ title: "Error", description: "Please enter street address and city", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const fullAddress = `${address}, ${city}, ${state}, India`;
+      
+      // Use OpenStreetMap Nominatim for free geocoding
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`
+      );
+      
+      if (!response.ok) throw new Error("Location search failed");
+      
+      const results = await response.json();
+      
+      if (results.length === 0) {
+        toast({ 
+          title: "Location not found", 
+          description: "Please check your address and try again",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const location = results[0];
+      form.setValue("latitude", location.lat);
+      form.setValue("longitude", location.lon);
+
+      toast({ 
+        title: "Success!", 
+        description: `Location found: ${location.display_name.split(',')[0]}`
+      });
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: "Failed to find location. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (data: ListingForm) => {
     setIsLoading(true);
@@ -398,17 +450,29 @@ export default function ListProperty() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={handleFindLocation}
+                    disabled={isLoading}
+                    className="w-full"
+                    data-testid="button-find-location"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Find Location on Map
+                  </Button>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
                     <FormField
                       control={form.control}
                       name="latitude"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Latitude (Optional)</FormLabel>
+                          <FormLabel className="text-sm">Latitude</FormLabel>
                           <FormControl>
-                            <Input placeholder="12.9716" data-testid="input-latitude" {...field} />
+                            <Input placeholder="12.9716" data-testid="input-latitude" {...field} readOnly className="bg-background" />
                           </FormControl>
-                          <FormDescription>Will use Bangalore coordinates if not provided</FormDescription>
+                          <FormDescription className="text-xs">Auto-filled by location search</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -419,9 +483,9 @@ export default function ListProperty() {
                       name="longitude"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Longitude (Optional)</FormLabel>
+                          <FormLabel className="text-sm">Longitude</FormLabel>
                           <FormControl>
-                            <Input placeholder="77.5946" data-testid="input-longitude" {...field} />
+                            <Input placeholder="77.5946" data-testid="input-longitude" {...field} readOnly className="bg-background" />
                           </FormControl>
                           <FormDescription>Will use Bangalore coordinates if not provided</FormDescription>
                           <FormMessage />
