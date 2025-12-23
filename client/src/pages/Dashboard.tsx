@@ -86,29 +86,30 @@ export default function Dashboard() {
     },
   });
 
-  const stats = [
+  const stats = isPropertyOwner ? [
     {
-      title: isPropertyOwner ? "Active Listings" : "Saved Properties",
+      title: "Active Listings",
       value: properties?.length || 0,
-      icon: isPropertyOwner ? Home : Heart,
+      icon: Home,
       color: "text-blue-500",
     },
     {
-      title: isPropertyOwner ? "Messages" : "Appointments",
-      value: (isPropertyOwner ? chats?.length : appointments?.length) || 0,
-      icon: isPropertyOwner ? MessageSquare : Calendar,
+      title: "Inquiries Received",
+      value: chats?.length || 0,
+      icon: MessageSquare,
       color: "text-green-500",
     },
+  ] : [
     {
-      title: "Profile Views",
-      value: Math.floor(Math.random() * 50) + 5,
-      icon: Eye,
-      color: "text-purple-500",
+      title: "Saved Properties",
+      value: properties?.length || 0,
+      icon: Heart,
+      color: "text-red-500",
     },
     {
-      title: "Response Rate",
-      value: `${Math.floor(Math.random() * 30) + 70}%`,
-      icon: Search,
+      title: "Scheduled Appointments",
+      value: appointments?.length || 0,
+      icon: Calendar,
       color: "text-orange-500",
     },
   ];

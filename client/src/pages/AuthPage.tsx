@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Home, User as UserIcon, Check, X } from "lucide-react";
+import { Home, Shield, DollarSign, Users, CheckCircle, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveAuthUser } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -43,6 +42,7 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignup, setIsSignup] = useState(false);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -87,7 +87,6 @@ export default function AuthPage() {
   const handleSignup = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Format phone number to standard Indian format
       const formattedData = {
         ...data,
         phone: data.phone ? formatIndianPhone(data.phone) : undefined,
@@ -108,251 +107,336 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-theme(spacing.16))] md:min-h-[calc(100vh-theme(spacing.20))] flex items-center justify-center p-4 bg-muted/30">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Home className="h-8 w-8 text-primary" />
+    <div className="min-h-screen flex">
+      {/* Left Sidebar */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 text-white p-12 flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-12">
+            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+              <Home className="h-6 w-6" />
+            </div>
+            <h1 className="text-2xl font-bold">DirectConnect</h1>
+          </div>
+          
+          <h2 className="text-5xl font-bold mb-6 leading-tight">
+            Find Your Dream Home in South India
+          </h2>
+          
+          <p className="text-lg text-white/80 mb-12">
+            Connect directly with property owners in Chennai, Coimbatore, Tiruppur & Bangalore. No middlemen, no brokerage.
+          </p>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Shield className="h-6 w-6 flex-shrink-0" />
+              <span className="text-lg">Verified property owners & tenants</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <DollarSign className="h-6 w-6 flex-shrink-0" />
+              <span className="text-lg">Zero brokerage fees</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Users className="h-6 w-6 flex-shrink-0" />
+              <span className="text-lg">Trusted by 1.2 Lakh+ users</span>
             </div>
           </div>
-          <CardTitle className="text-2xl">Welcome to DirectConnect</CardTitle>
-          <CardDescription>
-            Sign in to your account or create a new one
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
-              <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
-            </TabsList>
+        </div>
+      </div>
 
-            <TabsContent value="login">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="you@example.com"
-                            data-testid="input-login-email"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+      {/* Right Form Section */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <h3 className="text-3xl font-bold mb-2">
+              {isSignup ? "Create Account" : "Welcome Back"}
+            </h3>
+            <p className="text-muted-foreground">
+              {isSignup 
+                ? "Join thousands finding homes without brokers" 
+                : "Sign in to access your dashboard"}
+            </p>
+          </div>
 
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            data-testid="input-login-password"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          {/* Tab Buttons */}
+          <div className="flex gap-2 mb-8 bg-muted/50 p-1 rounded-lg">
+            <button
+              onClick={() => setIsSignup(false)}
+              className={`flex-1 py-2 px-4 rounded font-medium transition ${
+                !isSignup
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              data-testid="tab-login"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsSignup(true)}
+              className={`flex-1 py-2 px-4 rounded font-medium transition ${
+                isSignup
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              data-testid="tab-signup"
+            >
+              Sign Up
+            </button>
+          </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                    data-testid="button-login-submit"
-                  >
-                    {isLoading ? "Logging in..." : "Log In"}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
+          {/* Login Form */}
+          {!isSignup && (
+            <Form {...loginForm}>
+              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-5">
+                <FormField
+                  control={loginForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="you@example.com"
+                          className="h-11"
+                          data-testid="input-login-email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <TabsContent value="signup">
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
-                  <FormField
-                    control={signupForm.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="John Doe"
-                            data-testid="input-signup-fullname"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={loginForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className="h-11"
+                          data-testid="input-login-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={signupForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="you@example.com"
-                            data-testid="input-signup-email"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-base"
+                  disabled={isLoading}
+                  data-testid="button-login-submit"
+                >
+                  {isLoading ? "Signing in..." : "Sign In"}
+                  {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
 
-                  <FormField
-                    control={signupForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            data-testid="input-signup-password"
-                            {...field}
-                          />
-                        </FormControl>
-                        <div className="mt-2 space-y-1 text-sm">
-                          <div className="flex items-center gap-2">
-                            {passwordValidation.hasMinLength ? (
-                              <Check className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <X className="h-4 w-4 text-red-600" />
-                            )}
-                            <span className={passwordValidation.hasMinLength ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
-                              At least 8 characters
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {passwordValidation.hasUppercase ? (
-                              <Check className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <X className="h-4 w-4 text-red-600" />
-                            )}
-                            <span className={passwordValidation.hasUppercase ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
-                              One uppercase letter (A-Z)
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {passwordValidation.hasLowercase ? (
-                              <Check className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <X className="h-4 w-4 text-red-600" />
-                            )}
-                            <span className={passwordValidation.hasLowercase ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
-                              One lowercase letter (a-z)
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {passwordValidation.hasSpecialChar ? (
-                              <Check className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <X className="h-4 w-4 text-red-600" />
-                            )}
-                            <span className={passwordValidation.hasSpecialChar ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
-                              One special character (!@#$%^&*)
-                            </span>
-                          </div>
+                <div className="text-center text-sm text-muted-foreground">
+                  By continuing, you agree to our{" "}
+                  <a href="#" className="text-primary hover:underline">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="#" className="text-primary hover:underline">
+                    Privacy Policy
+                  </a>
+                </div>
+              </form>
+            </Form>
+          )}
+
+          {/* Signup Form */}
+          {isSignup && (
+            <Form {...signupForm}>
+              <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-5">
+                <FormField
+                  control={signupForm.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="John Doe"
+                          className="h-11"
+                          data-testid="input-signup-fullname"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signupForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="you@example.com"
+                          className="h-11"
+                          data-testid="input-signup-email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signupForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="+91 98765 43210"
+                          className="h-11"
+                          data-testid="input-signup-phone"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signupForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className="h-11"
+                          data-testid="input-signup-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      {passwordValue && (
+                        <div className="space-y-2 text-sm">
+                          {passwordValidation.checks.length > 0 && (
+                            <div className="space-y-1">
+                              {passwordValidation.checks.map((check, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center gap-2"
+                                >
+                                  {check.passed ? (
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                  ) : (
+                                    <div className="h-4 w-4 rounded-full border border-gray-300" />
+                                  )}
+                                  <span
+                                    className={
+                                      check.passed
+                                        ? "text-green-600"
+                                        : "text-muted-foreground"
+                                    }
+                                  >
+                                    {check.label}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      )}
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={signupForm.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number <span className="text-red-600">*</span></FormLabel>
-                        <FormControl>
-                          <Input
-                            type="tel"
-                            placeholder="+91 98765 43210"
-                            data-testid="input-signup-phone"
-                            {...field}
-                          />
-                        </FormControl>
-                        <p className="text-xs text-muted-foreground mt-1">Enter 10-digit Indian phone number</p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={signupForm.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>I am a</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-2"
-                          >
-                            <div className="flex items-center space-x-3 space-y-0">
-                              <RadioGroupItem value="tenant" id="tenant" data-testid="radio-role-tenant" />
-                              <Label htmlFor="tenant" className="font-normal cursor-pointer">
-                                <div className="flex items-center gap-2">
-                                  <UserIcon className="h-4 w-4" />
-                                  <span>Tenant - Looking for a rental</span>
+                <FormField
+                  control={signupForm.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>I am looking to</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <Label
+                                htmlFor="tenant"
+                                className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted transition"
+                                data-testid="label-tenant"
+                              >
+                                <RadioGroupItem value="tenant" id="tenant" />
+                                <div>
+                                  <div className="font-medium">Rent a Home</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    Find properties
+                                  </div>
                                 </div>
                               </Label>
                             </div>
-                            <div className="flex items-center space-x-3 space-y-0">
-                              <RadioGroupItem value="owner" id="owner" data-testid="radio-role-owner" />
-                              <Label htmlFor="owner" className="font-normal cursor-pointer">
-                                <div className="flex items-center gap-2">
-                                  <Home className="h-4 w-4" />
-                                  <span>Owner - I have a property to rent</span>
+                            <div className="flex-1">
+                              <Label
+                                htmlFor="owner"
+                                className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted transition"
+                                data-testid="label-owner"
+                              >
+                                <RadioGroupItem value="owner" id="owner" />
+                                <div>
+                                  <div className="font-medium">List Property</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    I'm an owner
+                                  </div>
                                 </div>
                               </Label>
                             </div>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                    data-testid="button-signup-submit"
-                  >
-                    {isLoading ? "Creating account..." : "Create Account"}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-base"
+                  disabled={isLoading}
+                  data-testid="button-signup-submit"
+                >
+                  {isLoading ? "Creating account..." : "Create Account"}
+                  {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
+
+                <div className="text-center text-sm text-muted-foreground">
+                  By continuing, you agree to our{" "}
+                  <a href="#" className="text-primary hover:underline">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="#" className="text-primary hover:underline">
+                    Privacy Policy
+                  </a>
+                </div>
+              </form>
+            </Form>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
