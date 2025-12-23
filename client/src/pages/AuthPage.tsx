@@ -109,7 +109,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Sidebar */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 text-white p-12 flex-col justify-between">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary to-primary/90 text-white p-12 flex-col justify-between shadow-2xl">
         <div>
           <div className="flex items-center gap-3 mb-12">
             <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -144,7 +144,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right Form Section */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background to-muted/30">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <h3 className="text-3xl font-bold mb-2">
