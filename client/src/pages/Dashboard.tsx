@@ -78,11 +78,14 @@ export default function Dashboard() {
 
   const savePropertyMutation = useMutation({
     mutationFn: async (propertyId: string) => {
-      await apiRequest("POST", `/api/properties/save`, { propertyId });
+      await apiRequest("POST", `/api/saved-properties`, { propertyId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
       toast({ title: "Property saved!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
     },
   });
 

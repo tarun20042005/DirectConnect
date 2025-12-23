@@ -28,7 +28,13 @@ const listingSchema = insertPropertySchema.extend({
 
 type ListingForm = z.infer<typeof listingSchema>;
 
-const indianStates = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi"];
+const supportedCities = ["Bangalore", "Chennai", "Coimbatore", "Tiruppur"];
+const stateMap: Record<string, string> = {
+  "Bangalore": "Karnataka",
+  "Chennai": "Tamil Nadu",
+  "Coimbatore": "Tamil Nadu",
+  "Tiruppur": "Tamil Nadu",
+};
 
 const steps = [
   { number: 1, title: "Basic Info", description: "Property details" },
@@ -64,8 +70,8 @@ export default function ListProperty() {
       bathrooms: 1,
       sqft: "",
       address: "",
-      city: "Bangalore",
-      state: "Karnataka",
+      city: supportedCities[0],
+      state: stateMap[supportedCities[0]],
       zipCode: "",
       latitude: "12.9716",
       longitude: "77.5946",
@@ -109,8 +115,8 @@ export default function ListProperty() {
   };
 
   const amenitiesOptions = [
-    "Parking", "WiFi", "Air Conditioning", "Heating", "Washer/Dryer",
-    "Dishwasher", "Pet Friendly", "Gym", "Pool", "Balcony"
+    "Parking", "WiFi", "Air Conditioning", "Furnished", "Water Supply",
+    "Pet Friendly", "Balcony", "Security"
   ];
 
   const progress = (currentStep / 4) * 100;
@@ -442,16 +448,28 @@ export default function ListProperty() {
                           )}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormField
                             control={form.control}
                             name="city"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-base">City</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Bangalore, Mumbai, Delhi" className="h-11" data-testid="input-city" {...field} />
-                                </FormControl>
+                                <Select value={field.value || ""} onValueChange={(value) => {
+                                  field.onChange(value);
+                                  form.setValue("state", stateMap[value] || "Tamil Nadu");
+                                }}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-11" data-testid="select-city">
+                                      <SelectValue placeholder="Select City" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {supportedCities.map(city => (
+                                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -463,18 +481,10 @@ export default function ListProperty() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-base">State</FormLabel>
-                                <Select value={field.value || ""} onValueChange={field.onChange}>
-                                  <FormControl>
-                                    <SelectTrigger className="h-11" data-testid="select-state">
-                                      <SelectValue placeholder="Select State" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {indianStates.map(state => (
-                                      <SelectItem key={state} value={state}>{state}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <FormControl>
+                                  <Input className="h-11 bg-muted" readOnly data-testid="input-state" {...field} />
+                                </FormControl>
+                                <FormDescription className="text-xs">Auto-selected</FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
