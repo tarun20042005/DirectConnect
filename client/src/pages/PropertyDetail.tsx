@@ -6,13 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Bed, Bath, Square, ShieldCheck, MessageSquare, Calendar, Heart, Share2, Eye, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { MapPin, Bed, Bath, Square, ShieldCheck, MessageSquare, Calendar, Heart, Share2, Eye, ChevronLeft, ChevronRight, X, Edit } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PropertyMap } from "@/components/PropertyMap";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { PropertyReviews } from "@/components/PropertyReviews";
 import type { Property, User } from "@shared/schema";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, isOwner } from "@/lib/auth";
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -70,6 +70,9 @@ export default function PropertyDetail() {
     .map(n => n[0])
     .join("")
     .toUpperCase() || "O";
+
+  // Check if current user is the property owner
+  const isPropertyOwner = user && property && user.id === property.ownerId;
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,10 +139,10 @@ export default function PropertyDetail() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h1 className="text-3xl md:text-4xl font-bold">{property.title}</h1>
-                    {property.verified && (
+                    {owner?.verified && (
                       <Badge variant="secondary" className="gap-1">
                         <ShieldCheck className="h-3 w-3" />
-                        Verified
+                        Verified Owner
                       </Badge>
                     )}
                   </div>
@@ -257,7 +260,17 @@ export default function PropertyDetail() {
                   </a>
                 )}
 
-                {user ? (
+                {isPropertyOwner ? (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => setLocation(`/edit-property/${property.id}`)}
+                    data-testid="button-edit-property"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Property
+                  </Button>
+                ) : user ? (
                   <>
                     {property.deposit && (
                       <Button 
