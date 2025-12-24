@@ -291,6 +291,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/appointments/:id", authenticateToken, async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!["pending", "approved", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const appointment = await storage.updateAppointment(req.params.id, { status });
+      res.json(appointment);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/properties/:propertyId/reviews", async (req, res) => {
     try {
       const reviews = await storage.getReviews(req.params.propertyId);

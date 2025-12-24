@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, MessageSquare, Calendar, Heart, Plus, Eye, Edit, Trash2, Search, AlertCircle } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
@@ -86,6 +87,20 @@ export default function Dashboard() {
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
+    },
+  });
+
+  const appointmentStatusMutation = useMutation({
+    mutationFn: async ({ appointmentId, status }: { appointmentId: string; status: "approved" | "rejected" }) => {
+      return await apiRequest("PATCH", `/api/appointments/${appointmentId}`, { status });
+    },
+    onSuccess: (_, { status }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/appointments", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/appointments/owner", user?.id] });
+      toast({ title: "Success", description: `Appointment ${status}!` });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update appointment", variant: "destructive" });
     },
   });
 
@@ -400,22 +415,75 @@ export default function Dashboard() {
               {appointments.map((appointment) => (
                 <Card key={appointment.id} className="hover-elevate cursor-pointer" onClick={() => setLocation(`/property/${appointment.propertyId}`)} data-testid={`card-appointment-${appointment.id}`}>
                   <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-start gap-4">
                       <div className="space-y-1 flex-1">
                         <p className="font-semibold">Property Viewing</p>
                         <p className="text-sm text-muted-foreground">
                           {new Date(appointment.scheduledDate).toLocaleString()}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Status: <span className="font-medium capitalize">{appointment.status}</span>
-                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <p className="text-xs text-muted-foreground">Status:</p>
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs capitalize ${
+                              appointment.status === "approved"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                : appointment.status === "rejected"
+                                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                            }`}
+                            data-testid={`status-badge-${appointment.id}`}
+                          >
+                            {appointment.status}
+                          </Badge>
+                        </div>
                         {appointment.message && (
                           <p className="text-sm text-muted-foreground mt-2 italic">"{appointment.message}"</p>
                         )}
                       </div>
-                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setLocation(`/property/${appointment.propertyId}`); }} data-testid={`button-view-appointment-${appointment.id}`}>
-                        View Details
-                      </Button>
+                      <div className="flex flex-col gap-2 flex-shrink-0">
+                        {isPropertyOwner && appointment.status === "pending" && (
+                          <>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                appointmentStatusMutation.mutate({ appointmentId: appointment.id, status: "approved" });
+                              }}
+                              disabled={appointmentStatusMutation.isPending}
+                              data-testid={`button-approve-${appointment.id}`}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                appointmentStatusMutation.mutate({ appointmentId: appointment.id, status: "rejected" });
+                              }}
+                              disabled={appointmentStatusMutation.isPending}
+                              data-testid={`button-reject-${appointment.id}`}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        {!isPropertyOwner && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLocation(`/property/${appointment.propertyId}`);
+                            }}
+                            data-testid={`button-view-appointment-${appointment.id}`}
+                          >
+                            View Details
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
