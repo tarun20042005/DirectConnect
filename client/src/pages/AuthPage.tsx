@@ -135,10 +135,6 @@ export default function AuthPage() {
               <DollarSign className="h-6 w-6 flex-shrink-0" />
               <span className="text-lg">Zero brokerage fees</span>
             </div>
-            <div className="flex items-center gap-4">
-              <Users className="h-6 w-6 flex-shrink-0" />
-              <span className="text-lg">Trusted by 1.2 Lakh+ users</span>
-            </div>
           </div>
         </div>
       </div>
