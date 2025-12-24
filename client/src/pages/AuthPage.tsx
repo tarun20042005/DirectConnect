@@ -144,7 +144,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right Form Section */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background to-muted/30">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <h3 className="text-3xl font-bold mb-2">
