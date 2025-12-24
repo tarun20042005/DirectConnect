@@ -60,14 +60,23 @@ export default function ScheduleViewing() {
 
     setIsLoading(true);
     try {
-      const [hours, minutes] = data.time.split(":");
-      const isPM = data.time.includes("PM");
-      let hour = parseInt(hours);
-      if (isPM && hour !== 12) hour += 12;
-      if (!isPM && hour === 12) hour = 0;
+      // Parse time like "09:00 AM" or "02:00 PM"
+      const timeParts = data.time.match(/(\d{1,2}):(\d{2})\s(AM|PM)/);
+      if (!timeParts) {
+        toast({ title: "Error", description: "Invalid time format", variant: "destructive" });
+        return;
+      }
+
+      let hour = parseInt(timeParts[1]);
+      const minutes = parseInt(timeParts[2]);
+      const period = timeParts[3];
+
+      // Convert to 24-hour format
+      if (period === "PM" && hour !== 12) hour += 12;
+      if (period === "AM" && hour === 12) hour = 0;
 
       const scheduledDate = new Date(data.date);
-      scheduledDate.setHours(hour, parseInt(minutes) || 0, 0, 0);
+      scheduledDate.setHours(hour, minutes, 0, 0);
 
       await apiRequest<Appointment>("POST", "/api/appointments", {
         propertyId: property.id,
