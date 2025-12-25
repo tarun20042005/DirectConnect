@@ -42,6 +42,11 @@ export function PropertyMap({
       maxZoom: 19,
     }).addTo(map);
 
+    // Ensure map container size is correct
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
     mapRef.current = map;
 
     // Request user geolocation if enabled
@@ -86,10 +91,10 @@ export function PropertyMap({
     markersRef.current = [];
 
     properties.forEach((property) => {
-      if (!property.latitude || !property.longitude) return;
-
       const lat = typeof property.latitude === 'string' ? parseFloat(property.latitude) : property.latitude;
       const lng = typeof property.longitude === 'string' ? parseFloat(property.longitude) : property.longitude;
+      
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
 
       const priceIcon = L.divIcon({
         className: "custom-marker",
@@ -113,16 +118,22 @@ export function PropertyMap({
     });
 
     if (properties.length > 0) {
-      const bounds = L.latLngBounds(
-        properties
-          .filter(p => p.latitude && p.longitude)
-          .map(p => {
+      const validProperties = properties.filter(p => {
+        const lat = typeof p.latitude === 'string' ? parseFloat(p.latitude) : p.latitude;
+        const lng = typeof p.longitude === 'string' ? parseFloat(p.longitude) : p.longitude;
+        return lat && lng && !isNaN(lat) && !isNaN(lng);
+      });
+
+      if (validProperties.length > 0) {
+        const bounds = L.latLngBounds(
+          validProperties.map(p => {
             const lat = typeof p.latitude === 'string' ? parseFloat(p.latitude) : p.latitude;
             const lng = typeof p.longitude === 'string' ? parseFloat(p.longitude) : p.longitude;
             return [lat, lng] as [number, number];
           })
-      );
-      mapRef.current?.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        );
+        mapRef.current?.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      }
     }
   }, [properties, onPropertyClick]);
 

@@ -180,8 +180,8 @@ export default function ListProperty() {
         price: data.price.toString(),
         deposit: data.deposit ? data.deposit.toString() : null,
         sqft: data.sqft ? parseInt(data.sqft) : null,
-        latitude: data.latitude || "40.7128",
-        longitude: data.longitude || "-74.0060",
+        latitude: data.latitude || "12.9716",
+        longitude: data.longitude || "77.5946",
         available: true,
       };
 
