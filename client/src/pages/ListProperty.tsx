@@ -134,11 +134,12 @@ export default function ListProperty() {
 
     try {
       setIsLoading(true);
-      // Include zipCode/pincode in the geocoding query for better accuracy
-      const fullAddress = `${address}, ${city}, ${state} ${zipCode || ""}, India`;
+      // More precise geocoding query by specifying structured components if possible, 
+      // or at least ensuring the order helps Nominatim
+      const fullAddress = `${address}, ${city}, ${state}, ${zipCode || ""}, India`;
       
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&addressdetails=1&limit=1`
       );
       
       if (!response.ok) throw new Error("Location search failed");
