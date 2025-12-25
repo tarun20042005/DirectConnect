@@ -125,6 +125,7 @@ export default function ListProperty() {
     const address = form.getValues("address");
     const city = form.getValues("city");
     const state = form.getValues("state");
+    const zipCode = form.getValues("zipCode");
 
     if (!address || !city) {
       toast({ title: "Error", description: "Please enter street address and city", variant: "destructive" });
@@ -133,7 +134,8 @@ export default function ListProperty() {
 
     try {
       setIsLoading(true);
-      const fullAddress = `${address}, ${city}, ${state}, India`;
+      // Include zipCode/pincode in the geocoding query for better accuracy
+      const fullAddress = `${address}, ${city}, ${state} ${zipCode || ""}, India`;
       
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`
