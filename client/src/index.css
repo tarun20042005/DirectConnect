@@ -11,43 +11,38 @@
   --elevate-2: rgba(0,0,0, .06);
   
   /* Clean Professional Whites & Grays */
-  --background: 0 0% 100%;
-  --foreground: 220 14% 18%;
-  --border: 220 10% 92%;
-  --card: 220 5% 98%;
-  --card-foreground: 220 14% 18%;
-  --card-border: 220 10% 90%;
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 214 32% 91%;
   
-  /* Sidebar - Subtle Professional */
-  --sidebar: 220 8% 96%;
-  --sidebar-foreground: 220 14% 20%;
-  --sidebar-border: 220 10% 88%;
-  --sidebar-primary: 220 80% 50%;
+  /* Sidebar - Deep Professional */
+  --sidebar: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 217 33% 17%;
+  --sidebar-primary: 161 72% 40%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 70% 92%;
-  --sidebar-accent-foreground: 220 80% 25%;
-  --sidebar-ring: 220 80% 50%;
+  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 161 72% 40%;
   
-  /* Popovers */
-  --popover: 0 0% 97%;
-  --popover-foreground: 220 14% 18%;
-  --popover-border: 220 10% 91%;
-  
-  /* Primary - Professional Blue */
-  --primary: 220 80% 50%;
+  /* Primary - Emerald Primary */
+  --primary: 161 72% 40%;
   --primary-foreground: 0 0% 100%;
   
-  /* Secondary - Refined Blue-Gray */
-  --secondary: 220 25% 86%;
-  --secondary-foreground: 220 40% 25%;
+  /* Secondary - Deep Navy */
+  --secondary: 222 47% 11%;
+  --secondary-foreground: 210 40% 98%;
   
   /* Muted - Professional Gray */
-  --muted: 220 10% 88%;
-  --muted-foreground: 220 8% 48%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
   
-  /* Accent - Premium Gold */
-  --accent: 48 96% 53%;
-  --accent-foreground: 30 90% 15%;
+  /* Accent - Indigo */
+  --accent: 221 83% 53%;
+  --accent-foreground: 210 40% 98%;
   
   /* Destructive */
   --destructive: 0 84% 60%;
@@ -109,43 +104,38 @@
   --elevate-2: rgba(255,255,255, .08);
   
   /* Dark Professional Backgrounds */
-  --background: 220 14% 8%;
-  --foreground: 0 0% 95%;
-  --border: 220 14% 20%;
-  --card: 220 14% 10%;
-  --card-foreground: 0 0% 95%;
-  --card-border: 220 14% 16%;
+  --background: 222 47% 4%;
+  --foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+  --card: 222 47% 4%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 217 33% 17%;
   
   /* Sidebar */
-  --sidebar: 220 14% 9%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-border: 220 14% 15%;
-  --sidebar-primary: 220 80% 56%;
+  --sidebar: 222 47% 2%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 217 33% 12%;
+  --sidebar-primary: 161 72% 40%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 60% 22%;
-  --sidebar-accent-foreground: 220 70% 85%;
-  --sidebar-ring: 220 80% 56%;
-  
-  /* Popovers */
-  --popover: 220 14% 12%;
-  --popover-foreground: 0 0% 95%;
-  --popover-border: 220 14% 18%;
+  --sidebar-accent: 217 33% 12%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 161 72% 40%;
   
   /* Primary */
-  --primary: 220 80% 50%;
+  --primary: 161 72% 40%;
   --primary-foreground: 0 0% 100%;
   
   /* Secondary */
-  --secondary: 220 20% 18%;
-  --secondary-foreground: 220 60% 90%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
   
   /* Muted */
-  --muted: 220 14% 18%;
-  --muted-foreground: 0 0% 75%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
   
   /* Accent */
-  --accent: 48 96% 53%;
-  --accent-foreground: 30 90% 15%;
+  --accent: 221 83% 53%;
+  --accent-foreground: 210 40% 98%;
   
   /* Destructive */
   --destructive: 0 84% 60%;

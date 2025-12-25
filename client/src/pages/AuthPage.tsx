@@ -109,38 +109,47 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Sidebar */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary to-primary/90 text-white p-12 flex-col justify-between shadow-2xl">
-        <div>
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0A1628] text-white p-12 flex-col justify-between shadow-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#1E3A5F] to-[#0A1628] opacity-90" />
+        <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-              <Home className="h-6 w-6" />
+            <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Home className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold">DirectConnect</h1>
+            <h1 className="text-2xl font-bold tracking-tight">DirectConnect</h1>
           </div>
           
-          <h2 className="text-5xl font-bold mb-6 leading-tight">
+          <h2 className="text-5xl font-bold mb-6 leading-tight tracking-tight">
             Find Your Dream Home in South India
           </h2>
           
-          <p className="text-lg text-white/80 mb-12">
+          <p className="text-lg text-slate-300 mb-12 max-w-md">
             Connect directly with property owners in Chennai, Coimbatore, Tiruppur & Bangalore. No middlemen, no brokerage.
           </p>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Shield className="h-6 w-6 flex-shrink-0" />
-              <span className="text-lg">Verified property owners & tenants</span>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 group">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                <Shield className="h-5 w-5 text-emerald-500" />
+              </div>
+              <span className="text-lg text-slate-200">Verified property owners & tenants</span>
             </div>
-            <div className="flex items-center gap-4">
-              <DollarSign className="h-6 w-6 flex-shrink-0" />
-              <span className="text-lg">Zero brokerage fees</span>
+            <div className="flex items-center gap-4 group">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                <DollarSign className="h-5 w-5 text-emerald-500" />
+              </div>
+              <span className="text-lg text-slate-200">Zero brokerage fees</span>
             </div>
           </div>
+        </div>
+        
+        <div className="relative z-10 pt-12 border-t border-white/10">
+          <p className="text-sm text-slate-400">© 2025 DirectConnect Rentals. Professional Housing Platform.</p>
         </div>
       </div>
 
       {/* Right Form Section */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <h3 className="text-3xl font-bold mb-2">
