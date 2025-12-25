@@ -109,11 +109,11 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Sidebar */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#0A1628] text-white p-12 flex-col justify-between shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#1E3A5F] to-[#0A1628] opacity-90" />
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] text-white p-12 flex-col justify-between shadow-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] opacity-90" />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-600/20">
               <Home className="h-6 w-6 text-white" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">DirectConnect</h1>
@@ -129,14 +129,14 @@ export default function AuthPage() {
 
           <div className="space-y-6">
             <div className="flex items-center gap-4 group">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
-                <Shield className="h-5 w-5 text-emerald-500" />
+              <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:bg-indigo-500/20 transition-colors">
+                <Shield className="h-5 w-5 text-indigo-400" />
               </div>
               <span className="text-lg text-slate-200">Verified property owners & tenants</span>
             </div>
             <div className="flex items-center gap-4 group">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
-                <DollarSign className="h-5 w-5 text-emerald-500" />
+              <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:bg-indigo-500/20 transition-colors">
+                <DollarSign className="h-5 w-5 text-indigo-400" />
               </div>
               <span className="text-lg text-slate-200">Zero brokerage fees</span>
             </div>
