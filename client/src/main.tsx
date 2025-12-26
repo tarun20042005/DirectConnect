@@ -19,6 +19,7 @@ if (typeof window !== 'undefined') {
     const msg = String(reason?.message || reason || '').toLowerCase();
     if (msg.includes('websocket') || msg.includes('localhost:undefined') || msg.includes('failed to construct')) {
       event.preventDefault?.();
+      event.stopImmediatePropagation?.();
     }
   }, true);
 

@@ -335,32 +335,35 @@ export default function AuthPage() {
                       </FormControl>
                       <FormMessage />
                       {passwordValue && (
-                        <div className="space-y-2 text-sm">
-                          {passwordValidation.checks.length > 0 && (
-                            <div className="space-y-1">
-                              {passwordValidation.checks.map((check, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center gap-2"
+                        <div className="space-y-3 text-sm mt-2 p-3 bg-muted/30 rounded-lg border border-border">
+                          <div className="flex flex-col gap-2">
+                            {[
+                              { label: "8+ characters", passed: passwordValidation.hasMinLength },
+                              { label: "Uppercase letter", passed: passwordValidation.hasUppercase },
+                              { label: "Lowercase letter", passed: passwordValidation.hasLowercase },
+                              { label: "Special character", passed: passwordValidation.hasSpecialChar },
+                            ].map((check, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-2"
+                              >
+                                {check.passed ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <div className="h-4 w-4 rounded-full border border-gray-300 dark:border-gray-600" />
+                                )}
+                                <span
+                                  className={
+                                    check.passed
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-muted-foreground"
+                                  }
                                 >
-                                  {check.passed ? (
-                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <div className="h-4 w-4 rounded-full border border-gray-300" />
-                                  )}
-                                  <span
-                                    className={
-                                      check.passed
-                                        ? "text-green-600"
-                                        : "text-muted-foreground"
-                                    }
-                                  >
-                                    {check.label}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                  {check.label}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </FormItem>

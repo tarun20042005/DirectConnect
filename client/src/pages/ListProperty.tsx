@@ -88,16 +88,17 @@ export default function ListProperty() {
 
     try {
       const newImages: string[] = [];
-      for (const file of Array.from(files)) {
+      const filesArray = Array.from(files);
+      for (const file of filesArray) {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = (event: ProgressEvent<FileReader>) => {
           if (event.target?.result) {
             newImages.push(event.target.result as string);
-            if (newImages.length === files.length) {
+            if (newImages.length === filesArray.length) {
               const allImages = [...uploadedImages, ...newImages];
               setUploadedImages(allImages);
               form.setValue("images", allImages);
-              toast({ title: "Success", description: `${files.length} images uploaded` });
+              toast({ title: "Success", description: `${filesArray.length} images uploaded` });
             }
           }
         };

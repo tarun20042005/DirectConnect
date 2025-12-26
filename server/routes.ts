@@ -105,7 +105,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const properties = await storage.getProperties();
       res.json(properties);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("Error fetching properties:", error);
+      res.status(500).json({ message: "Failed to fetch properties" });
     }
   });
 
