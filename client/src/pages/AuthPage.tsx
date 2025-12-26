@@ -69,11 +69,15 @@ export default function AuthPage() {
   const handleLogin = async (data: LoginForm) => {
     setIsLoading(true);
     try {
+      console.log("Login attempt for:", data.email);
       const response = await apiRequest<any>("POST", "/api/auth/login", data);
+      console.log("Login successful, response:", response);
       saveAuthUser(response);
       toast({ title: "Welcome back!", description: "You've successfully logged in." });
+      console.log("Redirecting to /dashboard");
       setLocation("/dashboard");
     } catch (error: any) {
+      console.error("Login error details:", error);
       toast({
         title: "Login failed",
         description: error.message || "Invalid credentials",
