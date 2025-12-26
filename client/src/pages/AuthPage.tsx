@@ -201,8 +201,9 @@ export default function AuthPage() {
                       <FormControl>
                         <Input
                           type="email"
+                          autoComplete="email"
                           placeholder="you@example.com"
-                          className="h-11"
+                          className="h-11 bg-white dark:bg-slate-900"
                           data-testid="input-login-email"
                           {...field}
                         />
@@ -221,8 +222,9 @@ export default function AuthPage() {
                       <FormControl>
                         <Input
                           type="password"
+                          autoComplete="current-password"
                           placeholder="••••••••"
-                          className="h-11"
+                          className="h-11 bg-white dark:bg-slate-900"
                           data-testid="input-login-password"
                           {...field}
                         />
@@ -268,8 +270,9 @@ export default function AuthPage() {
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
                         <Input
+                          autoComplete="name"
                           placeholder="John Doe"
-                          className="h-11"
+                          className="h-11 bg-white dark:bg-slate-900"
                           data-testid="input-signup-fullname"
                           {...field}
                         />
@@ -288,8 +291,9 @@ export default function AuthPage() {
                       <FormControl>
                         <Input
                           type="email"
+                          autoComplete="email"
                           placeholder="you@example.com"
-                          className="h-11"
+                          className="h-11 bg-white dark:bg-slate-900"
                           data-testid="input-signup-email"
                           {...field}
                         />
@@ -307,8 +311,10 @@ export default function AuthPage() {
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
                         <Input
+                          type="tel"
+                          autoComplete="tel"
                           placeholder="+91 98765 43210"
-                          className="h-11"
+                          className="h-11 bg-white dark:bg-slate-900"
                           data-testid="input-signup-phone"
                           {...field}
                         />
@@ -327,8 +333,9 @@ export default function AuthPage() {
                       <FormControl>
                         <Input
                           type="password"
+                          autoComplete="new-password"
                           placeholder="••••••••"
-                          className="h-11"
+                          className="h-11 bg-white dark:bg-slate-900"
                           data-testid="input-signup-password"
                           {...field}
                         />
