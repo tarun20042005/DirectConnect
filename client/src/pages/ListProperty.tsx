@@ -73,8 +73,7 @@ export default function ListProperty() {
       city: supportedCities[0],
       state: stateMap[supportedCities[0]],
       zipCode: "",
-      latitude: "12.9716",
-      longitude: "77.5946",
+      googleMapsEmbed: "",
       images: uploadedImages,
       amenities: [],
       virtualTourUrl: "",
@@ -123,57 +122,8 @@ export default function ListProperty() {
   const progress = (currentStep / 4) * 100;
 
   const handleFindLocation = async () => {
-    const address = form.getValues("address");
-    const city = form.getValues("city");
-    const state = form.getValues("state");
-    const zipCode = form.getValues("zipCode");
-
-    if (!address || !city) {
-      toast({ title: "Error", description: "Please enter street address and city", variant: "destructive" });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      // More precise geocoding query by specifying structured components if possible, 
-      // or at least ensuring the order helps Nominatim
-      const fullAddress = `${address}, ${city}, ${state}, ${zipCode || ""}, India`;
-      
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&addressdetails=1&limit=1`
-      );
-      
-      if (!response.ok) throw new Error("Location search failed");
-      
-      const results = await response.json();
-      
-      if (results.length === 0) {
-        toast({ 
-          title: "Location not found", 
-          description: "Please check your address and try again",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const location = results[0];
-      form.setValue("latitude", location.lat);
-      form.setValue("longitude", location.lon);
-
-      toast({ 
-        title: "Success!", 
-        description: `Location found: ${location.display_name.split(',')[0]}`
-      });
-    } catch (error: any) {
-      toast({ 
-        title: "Error", 
-        description: "Failed to find location. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // This function is now deprecated in favor of Google Maps Embed
+    toast({ title: "Note", description: "Please use the Google Maps embed code below." });
   };
 
   const handleSubmit = async (data: ListingForm) => {
@@ -184,8 +134,6 @@ export default function ListProperty() {
         price: data.price.toString(),
         deposit: data.deposit ? data.deposit.toString() : null,
         sqft: data.sqft ? parseInt(data.sqft) : null,
-        latitude: data.latitude || "12.9716",
-        longitude: data.longitude || "77.5946",
         available: true,
       };
 
@@ -509,51 +457,28 @@ export default function ListProperty() {
                           />
                         </div>
 
-                        <Button 
-                          type="button"
-                          variant="outline"
-                          onClick={handleFindLocation}
-                          disabled={isLoading}
-                          className="w-full h-11 text-base"
-                          data-testid="button-find-location"
-                        >
-                          <MapPin className="h-5 w-5 mr-2" />
-                          Find Exact Location on Map
-                        </Button>
-
-                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="latitude"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-sm">Latitude</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="12.9716" className="h-11 bg-white dark:bg-slate-950" data-testid="input-latitude" {...field} readOnly />
-                                  </FormControl>
-                                  <FormDescription className="text-xs">Auto-filled by location search</FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="longitude"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-sm">Longitude</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="77.5946" className="h-11 bg-white dark:bg-slate-950" data-testid="input-longitude" {...field} readOnly />
-                                  </FormControl>
-                                  <FormDescription className="text-xs">Auto-filled by location search</FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
+                        <FormField
+                          control={form.control}
+                          name="googleMapsEmbed"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-base">Google Maps Embed Code</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder={'Paste the <iframe ...> code from Google Maps'}
+                                  className="h-24 bg-white dark:bg-slate-950 font-mono text-xs"
+                                  data-testid="input-google-maps-embed"
+                                  {...field}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormDescription className="text-xs">
+                                Go to Google Maps, find your location, click Share > Embed a map, and copy the HTML.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>

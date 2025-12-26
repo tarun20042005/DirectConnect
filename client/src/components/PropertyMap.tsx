@@ -91,8 +91,11 @@ export function PropertyMap({
     markersRef.current = [];
 
     properties.forEach((property) => {
-      const lat = typeof property.latitude === 'string' ? parseFloat(property.latitude) : property.latitude;
-      const lng = typeof property.longitude === 'string' ? parseFloat(property.longitude) : property.longitude;
+      // Skip properties without lat/long if they use embed code
+      if (!('latitude' in property) || !('longitude' in property)) return;
+
+      const lat = typeof (property as any).latitude === 'string' ? parseFloat((property as any).latitude) : (property as any).latitude;
+      const lng = typeof (property as any).longitude === 'string' ? parseFloat((property as any).longitude) : (property as any).longitude;
       
       if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
 
@@ -119,16 +122,17 @@ export function PropertyMap({
 
     if (properties.length > 0) {
       const validProperties = properties.filter(p => {
-        const lat = typeof p.latitude === 'string' ? parseFloat(p.latitude) : p.latitude;
-        const lng = typeof p.longitude === 'string' ? parseFloat(p.longitude) : p.longitude;
+        if (!('latitude' in p) || !('longitude' in p)) return false;
+        const lat = typeof (p as any).latitude === 'string' ? parseFloat((p as any).latitude) : (p as any).latitude;
+        const lng = typeof (p as any).longitude === 'string' ? parseFloat((p as any).longitude) : (p as any).longitude;
         return lat && lng && !isNaN(lat) && !isNaN(lng);
       });
 
       if (validProperties.length > 0) {
         const bounds = L.latLngBounds(
           validProperties.map(p => {
-            const lat = typeof p.latitude === 'string' ? parseFloat(p.latitude) : p.latitude;
-            const lng = typeof p.longitude === 'string' ? parseFloat(p.longitude) : p.longitude;
+            const lat = typeof (p as any).latitude === 'string' ? parseFloat((p as any).latitude) : (p as any).latitude;
+            const lng = typeof (p as any).longitude === 'string' ? parseFloat((p as any).longitude) : (p as any).longitude;
             return [lat, lng] as [number, number];
           })
         );
@@ -138,9 +142,9 @@ export function PropertyMap({
   }, [properties, onPropertyClick]);
 
   useEffect(() => {
-    if (selectedProperty && selectedProperty.latitude && selectedProperty.longitude) {
-      const lat = typeof selectedProperty.latitude === 'string' ? parseFloat(selectedProperty.latitude) : selectedProperty.latitude;
-      const lng = typeof selectedProperty.longitude === 'string' ? parseFloat(selectedProperty.longitude) : selectedProperty.longitude;
+    if (selectedProperty && 'latitude' in selectedProperty && 'longitude' in selectedProperty) {
+      const lat = typeof (selectedProperty as any).latitude === 'string' ? parseFloat((selectedProperty as any).latitude) : (selectedProperty as any).latitude;
+      const lng = typeof (selectedProperty as any).longitude === 'string' ? parseFloat((selectedProperty as any).longitude) : (selectedProperty as any).longitude;
       mapRef.current?.setView([lat, lng], 15, { animate: true });
     }
   }, [selectedProperty]);

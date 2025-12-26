@@ -65,8 +65,7 @@ export default function EditProperty() {
       city: "Bangalore",
       state: "Karnataka",
       zipCode: "",
-      latitude: "12.9716",
-      longitude: "77.5946",
+      googleMapsEmbed: "",
       images: [],
       amenities: [],
       virtualTourUrl: "",
@@ -91,8 +90,7 @@ export default function EditProperty() {
         city: property.city,
         state: property.state,
         zipCode: property.zipCode,
-        latitude: property.latitude?.toString() || "12.9716",
-        longitude: property.longitude?.toString() || "77.5946",
+        googleMapsEmbed: property.googleMapsEmbed || "",
         images: property.images || [],
         amenities: property.amenities || [],
         virtualTourUrl: property.virtualTourUrl || "",
@@ -150,8 +148,6 @@ export default function EditProperty() {
         price: data.price.toString(),
         deposit: data.deposit ? data.deposit.toString() : null,
         sqft: data.sqft ? parseInt(data.sqft) : null,
-        latitude: data.latitude || "40.7128",
-        longitude: data.longitude || "-74.0060",
         available: data.available ?? true,
       };
 
@@ -477,37 +473,28 @@ export default function EditProperty() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="latitude"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Latitude (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="12.9716" data-testid="input-latitude" {...field} />
-                          </FormControl>
-                          <FormDescription>Will use Bangalore coordinates if not provided</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="longitude"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Longitude (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="77.5946" data-testid="input-longitude" {...field} />
-                          </FormControl>
-                          <FormDescription>Will use Bangalore coordinates if not provided</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="googleMapsEmbed"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Google Maps Embed Code</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={'Paste the <iframe ...> code from Google Maps'}
+                            className="h-24 bg-white dark:bg-slate-950 font-mono text-xs"
+                            data-testid="input-google-maps-embed"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Go to Google Maps, find your location, click Share > Embed a map, and copy the HTML.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               )}
 

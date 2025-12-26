@@ -216,12 +216,16 @@ export default function PropertyDetail() {
 
             <div>
               <h2 className="text-2xl font-semibold mb-4">Location</h2>
-              <div className="h-96 rounded-lg overflow-hidden border">
-                <PropertyMap properties={[property]} center={[
-                  typeof property.latitude === 'string' ? parseFloat(property.latitude) : property.latitude,
-                  typeof property.longitude === 'string' ? parseFloat(property.longitude) : property.longitude
-                ]} zoom={15} />
-              </div>
+              {property.googleMapsEmbed ? (
+                <div 
+                  className="h-96 rounded-lg overflow-hidden border"
+                  dangerouslySetInnerHTML={{ __html: property.googleMapsEmbed }}
+                />
+              ) : (
+                <div className="h-96 rounded-lg overflow-hidden border">
+                  <PropertyMap properties={[property]} center={[12.9716, 77.5946]} zoom={15} />
+                </div>
+              )}
             </div>
 
             <Separator />
