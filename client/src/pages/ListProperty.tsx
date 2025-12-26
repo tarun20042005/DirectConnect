@@ -698,9 +698,9 @@ export default function ListProperty() {
                           <div className="pt-4 border-t border-blue-300 dark:border-blue-700">
                             <p className="text-sm text-muted-foreground mb-2">Amenities</p>
                             <div className="flex flex-wrap gap-2">
-                              {form.watch("amenities").map((amenity) => (
+                              {(form.watch("amenities") as string[] || []).map((amenity: string) => (
                                 <span key={amenity} className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-full text-sm font-medium">
-                                  {amenity}
+                                  {String(amenity)}
                                 </span>
                               ))}
                             </div>

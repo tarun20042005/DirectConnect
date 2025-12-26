@@ -96,6 +96,7 @@ export default function AuthPage() {
       toast({ title: "Welcome!", description: "Your account has been created successfully." });
       setLocation("/dashboard");
     } catch (error: any) {
+      console.error("Signup error details:", error);
       toast({
         title: "Signup failed",
         description: error.message || "Could not create account",
