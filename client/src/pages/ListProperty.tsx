@@ -473,7 +473,7 @@ export default function ListProperty() {
                                 />
                               </FormControl>
                               <FormDescription className="text-xs">
-                                Go to Google Maps, find your location, click Share > Embed a map, and copy the HTML.
+                                Go to Google Maps, find your location, click Share, select "Embed a map", and copy the HTML.
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
