@@ -1,153 +1,30 @@
-import { useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import type { Property } from "@shared/schema";
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+import { Card } from "@/components/ui/card";
+import { MapPin } from "lucide-react";
 
 interface PropertyMapProps {
-  properties: Property[];
-  selectedProperty?: Property | null;
-  onPropertyClick?: (property: Property) => void;
-  center?: [number, number];
-  zoom?: number;
-  showUserLocation?: boolean;
+  embedCode?: string | null;
+  address?: string;
 }
 
-export function PropertyMap({
-  properties,
-  selectedProperty,
-  onPropertyClick,
-  center = [12.9716, 77.5946],
-  zoom = 11,
-  showUserLocation = true,
-}: PropertyMapProps) {
-  const mapRef = useRef<L.Map | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  const userMarkerRef = useRef<L.Marker | null>(null);
+export function PropertyMap({ embedCode, address }: PropertyMapProps) {
+  if (!embedCode) {
+    return (
+      <Card className="w-full h-[400px] flex flex-col items-center justify-center bg-muted/30 border-dashed border-2">
+        <MapPin className="h-10 w-10 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground text-center px-6">
+          Location map not available for this property.<br />
+          {address && <span className="text-sm">Address: {address}</span>}
+        </p>
+      </Card>
+    );
+  }
 
-  useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
-
-    const map = L.map(mapContainerRef.current).setView(center, zoom);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Ensure map container size is correct
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-
-    mapRef.current = map;
-
-    // Request user geolocation if enabled
-    if (showUserLocation && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          if (mapRef.current && userMarkerRef.current === null) {
-            const userIcon = L.divIcon({
-              className: "user-location-marker",
-              html: `
-                <div class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg" style="transform: translate(-50%, -50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
-                  📍
-                </div>
-              `,
-              iconSize: [24, 24],
-              iconAnchor: [12, 12],
-            });
-            userMarkerRef.current = L.marker([latitude, longitude], { icon: userIcon })
-              .addTo(mapRef.current)
-              .bindPopup("Your Location");
-            mapRef.current.setView([latitude, longitude], zoom);
-          }
-        },
-        (error) => {
-          console.log("Geolocation not available:", error.message);
-        }
-      );
-    }
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-      userMarkerRef.current = null;
-    };
-  }, [center, zoom, showUserLocation]);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
-
-    properties.forEach((property) => {
-      // Skip properties without lat/long if they use embed code
-      if (!('latitude' in property) || !('longitude' in property)) return;
-
-      const lat = typeof (property as any).latitude === 'string' ? parseFloat((property as any).latitude) : (property as any).latitude;
-      const lng = typeof (property as any).longitude === 'string' ? parseFloat((property as any).longitude) : (property as any).longitude;
-      
-      if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
-
-      const priceIcon = L.divIcon({
-        className: "custom-marker",
-        html: `
-          <div class="bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold shadow-lg whitespace-nowrap" style="transform: translate(-50%, -100%);">
-            ₹${(parseInt(property.price) || 0).toLocaleString('en-IN')}/mo
-          </div>
-        `,
-        iconSize: [80, 30],
-        iconAnchor: [40, 30],
-      });
-
-      const marker = L.marker([lat, lng], { icon: priceIcon })
-        .addTo(mapRef.current!);
-
-      if (onPropertyClick) {
-        marker.on("click", () => onPropertyClick(property));
-      }
-
-      markersRef.current.push(marker);
-    });
-
-    if (properties.length > 0) {
-      const validProperties = properties.filter(p => {
-        if (!('latitude' in p) || !('longitude' in p)) return false;
-        const lat = typeof (p as any).latitude === 'string' ? parseFloat((p as any).latitude) : (p as any).latitude;
-        const lng = typeof (p as any).longitude === 'string' ? parseFloat((p as any).longitude) : (p as any).longitude;
-        return lat && lng && !isNaN(lat) && !isNaN(lng);
-      });
-
-      if (validProperties.length > 0) {
-        const bounds = L.latLngBounds(
-          validProperties.map(p => {
-            const lat = typeof (p as any).latitude === 'string' ? parseFloat((p as any).latitude) : (p as any).latitude;
-            const lng = typeof (p as any).longitude === 'string' ? parseFloat((p as any).longitude) : (p as any).longitude;
-            return [lat, lng] as [number, number];
-          })
-        );
-        mapRef.current?.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-      }
-    }
-  }, [properties, onPropertyClick]);
-
-  useEffect(() => {
-    if (selectedProperty && 'latitude' in selectedProperty && 'longitude' in selectedProperty) {
-      const lat = typeof (selectedProperty as any).latitude === 'string' ? parseFloat((selectedProperty as any).latitude) : (selectedProperty as any).latitude;
-      const lng = typeof (selectedProperty as any).longitude === 'string' ? parseFloat((selectedProperty as any).longitude) : (selectedProperty as any).longitude;
-      mapRef.current?.setView([lat, lng], 15, { animate: true });
-    }
-  }, [selectedProperty]);
-
-  return <div ref={mapContainerRef} className="w-full h-full min-h-[400px]" data-testid="map-container" />;
+  return (
+    <Card className="w-full h-[400px] overflow-hidden">
+      <div 
+        className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
+        dangerouslySetInnerHTML={{ __html: embedCode }}
+      />
+    </Card>
+  );
 }
