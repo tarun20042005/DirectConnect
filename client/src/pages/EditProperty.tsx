@@ -156,7 +156,9 @@ export default function EditProperty() {
       // Invalidate property queries to refresh listings
       await queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/properties", propertyId] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/properties/owner", user.id] });
+      if (user?.id) {
+        await queryClient.invalidateQueries({ queryKey: ["/api/properties/owner", user.id] });
+      }
       
       toast({ title: "Success!", description: "Your property has been updated." });
       setLocation("/dashboard");
@@ -481,7 +483,7 @@ export default function EditProperty() {
                         <FormLabel>Google Maps Embed Code</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder={'Paste the <iframe ...> code from Google Maps'}
+                            placeholder="Paste the iframe code from Google Maps"
                             className="h-24 bg-white dark:bg-slate-950 font-mono text-xs"
                             data-testid="input-google-maps-embed"
                             {...field}
