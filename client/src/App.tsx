@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -25,8 +25,22 @@ import DepositPayment from "@/pages/DepositPayment";
 import PropertyComparisonPage from "@/pages/PropertyComparison";
 import UserProfile from "@/pages/UserProfile";
 import NotFound from "@/pages/not-found";
+import { getAuthUser } from "@/lib/auth";
+import { useEffect } from "react";
 
 function Router() {
+  const [location, setLocation] = useLocation();
+  const user = getAuthUser();
+
+  useEffect(() => {
+    const publicPaths = ["/", "/auth", "/search", "/about", "/contact", "/terms", "/privacy", "/how-it-works", "/trust-safety", "/compare"];
+    const isPublicPath = publicPaths.includes(location) || location.startsWith("/property/") || location.startsWith("/user/");
+
+    if (!user && !isPublicPath) {
+      setLocation("/auth");
+    }
+  }, [user, location, setLocation]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />

@@ -75,7 +75,8 @@ export default function AuthPage() {
       saveAuthUser(response);
       toast({ title: "Welcome back!", description: "You've successfully logged in." });
       console.log("Redirecting to /dashboard");
-      setLocation("/dashboard");
+      // Force a reload to ensure all components see the updated auth state
+      window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Login error details:", error);
       toast({
@@ -98,7 +99,8 @@ export default function AuthPage() {
       const response = await apiRequest<any>("POST", "/api/auth/signup", formattedData);
       saveAuthUser(response);
       toast({ title: "Welcome!", description: "Your account has been created successfully." });
-      setLocation("/dashboard");
+      // Force a reload to ensure all components see the updated auth state
+      window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Signup error details:", error);
       toast({
