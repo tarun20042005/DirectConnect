@@ -348,5 +348,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use memory storage to avoid database errors when offline
+// Use database storage for persistent data
+// export { DatabaseStorage } from "./storage-db";
+// import { DatabaseStorage } from "./storage-db";
 export const storage = new MemStorage();
