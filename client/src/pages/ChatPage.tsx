@@ -114,11 +114,11 @@ export default function ChatPage() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !chatId) return;
+    if (!message.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
     const newMessage = {
       type: "message",
-      chatId,
+      chatId, // Can be null for tenants, server will handle it
       content: message.trim(),
     };
 

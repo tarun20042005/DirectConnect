@@ -503,12 +503,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return;
           }
 
-          if (!message.chatId) {
-            ws.send(JSON.stringify({ type: 'error', message: 'Chat ID required' }));
-            return;
+          let chatId = message.chatId;
+
+          if (!chatId) {
+            // If tenant sends message without chatId, find or create it
+            const property = await storage.getProperty(currentPropertyId);
+            if (!property) {
+              ws.send(JSON.stringify({ type: 'error', message: 'Property not found' }));
+              return;
+            }
+
+            let chat = await storage.getChatByPropertyAndTenant(currentPropertyId, currentUserId);
+            if (!chat) {
+              chat = await storage.createChat({
+                propertyId: currentPropertyId,
+                tenantId: currentUserId,
+                ownerId: property.ownerId,
+              });
+            }
+            chatId = chat.id;
           }
 
-          const chat = await storage.getChat(message.chatId);
+          const chat = await storage.getChat(chatId);
           if (!chat) {
             ws.send(JSON.stringify({ type: 'error', message: 'Chat not found' }));
             return;
