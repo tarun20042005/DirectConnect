@@ -273,8 +273,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/appointments/owner/:ownerId", async (req, res) => {
+  app.get("/api/appointments/owner/:ownerId", authenticateToken, async (req, res) => {
     try {
+      // Security check: only allow owners to fetch their own appointments
+      if (req.userId !== req.params.ownerId) {
+        return res.status(403).json({ message: "Unauthorized access to owner appointments" });
+      }
       const appointments = await storage.getAppointmentsByOwner(req.params.ownerId);
       res.json(appointments);
     } catch (error: any) {
