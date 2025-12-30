@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +13,8 @@ import { VerificationBadge } from "@/components/VerificationBadge";
 import { PropertyReviews } from "@/components/PropertyReviews";
 import type { Property, User } from "@shared/schema";
 import { getAuthUser, isOwner } from "@/lib/auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -29,6 +31,30 @@ export default function PropertyDetail() {
     queryKey: ["/api/users", property?.ownerId],
     enabled: !!property?.ownerId,
   });
+
+  const { data: savedProperties } = useQuery<Property[]>({
+    queryKey: ["/api/properties/saved", user?.id],
+    enabled: !!user,
+  });
+
+  const savePropertyMutation = useMutation({
+    mutationFn: async () => {
+      if (isSaved) {
+        await apiRequest("DELETE", `/api/saved-properties/${user?.id}/${id}`);
+      } else {
+        await apiRequest("POST", "/api/saved-properties", { propertyId: id, userId: user?.id });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
+      toast({ title: isSaved ? "Property removed from favorites" : "Property saved to favorites" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Action failed", variant: "destructive" });
+    },
+  });
+
+  const isSaved = savedProperties?.some(p => p.id === id);
 
   if (isLoading) {
     return (
@@ -155,8 +181,15 @@ export default function PropertyDetail() {
                   <Button variant="outline" size="icon" data-testid="button-share">
                     <Share2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" data-testid="button-save-property">
-                    <Heart className="h-4 w-4" />
+                  <Button 
+                    variant={isSaved ? "default" : "outline"} 
+                    size="icon" 
+                    onClick={() => savePropertyMutation.mutate()}
+                    disabled={savePropertyMutation.isPending}
+                    className={isSaved ? "text-red-500 bg-red-50 hover:bg-red-100 border-red-200" : ""}
+                    data-testid="button-save-property"
+                  >
+                    <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
                   </Button>
                 </div>
               </div>

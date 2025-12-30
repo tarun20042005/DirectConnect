@@ -70,6 +70,7 @@ export default function Dashboard() {
 
   const { data: chatUsers } = useQuery<Record<string, User>>({
     queryKey: ["/api/chats/users"],
+    enabled: !!user,
   });
 
   const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({

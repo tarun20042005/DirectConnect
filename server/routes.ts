@@ -355,10 +355,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/chats/owner/:ownerId", async (req, res) => {
+  app.get("/api/chats/owner/:ownerId", authenticateToken, async (req, res) => {
     try {
+      // Security check: only allow owners to fetch their own chats
+      if (req.userId !== req.params.ownerId) {
+        return res.status(403).json({ message: "Unauthorized access to chats" });
+      }
       const chats = await storage.getChatsByOwner(req.params.ownerId);
       res.json(chats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/chats/users", authenticateToken, async (req, res) => {
+    try {
+      const chats = await storage.getChatsByOwner(req.userId!);
+      const tenantIds = Array.from(new Set(chats.map(c => c.tenantId)));
+      const ownerIds = Array.from(new Set(chats.map(c => c.ownerId)));
+      const allUserIds = Array.from(new Set([...tenantIds, ...ownerIds]));
+      
+      const users: Record<string, any> = {};
+      for (const id of allUserIds) {
+        const user = await storage.getUser(id);
+        if (user) {
+          const { password: _, ...safeUser } = user;
+          users[id] = safeUser;
+        }
+      }
+      res.json(users);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
