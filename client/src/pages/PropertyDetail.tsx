@@ -21,6 +21,7 @@ export default function PropertyDetail() {
   const [, setLocation] = useLocation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const { toast } = useToast();
   const user = getAuthUser();
 
   const { data: property, isLoading } = useQuery<Property>({
@@ -255,9 +256,7 @@ export default function PropertyDetail() {
                   dangerouslySetInnerHTML={{ __html: property.googleMapsEmbed }}
                 />
               ) : (
-                <div className="h-96 rounded-lg overflow-hidden border">
-                  <PropertyMap properties={[property]} center={[12.9716, 77.5946]} zoom={15} />
-                </div>
+                <PropertyMap embedCode={property.googleMapsEmbed} address={property.address} />
               )}
             </div>
 

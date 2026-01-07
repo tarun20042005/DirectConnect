@@ -152,6 +152,7 @@ export class MemStorage implements IStorage {
       amenities: Array.isArray(insertProperty.amenities) ? (insertProperty.amenities as string[]) : [],
       virtualTourUrl: insertProperty.virtualTourUrl || null,
       available: true,
+      verified: false,
       views: 0,
       createdAt: new Date(),
     };

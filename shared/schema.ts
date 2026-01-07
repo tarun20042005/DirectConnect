@@ -31,6 +31,7 @@ export const properties = pgTable("properties", {
   state: text("state").notNull(),
   zipCode: text("zip_code").notNull(),
   googleMapsEmbed: text("google_maps_embed"),
+  verified: boolean("verified").default(false),
   images: json("images").$type<string[]>().notNull(),
   amenities: json("amenities").$type<string[]>().notNull(),
   virtualTourUrl: text("virtual_tour_url"),
