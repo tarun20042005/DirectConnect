@@ -482,20 +482,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let tenantId: string;
 
             if (isOwner) {
-              if (!message.chatId) {
+              if (message.chatId) {
+                chat = await storage.getChat(message.chatId);
+                if (!chat || chat.ownerId !== currentUserId || chat.propertyId !== message.propertyId) {
+                  ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized chat access' }));
+                  ws.close();
+                  return;
+                }
+                tenantId = chat.tenantId;
+              } else {
+                // If owner joins without chatId, they are likely just viewing the property chat list
+                // but for a specific property chat, they MUST provide chatId.
+                // However, let's make it more resilient.
                 ws.send(JSON.stringify({ type: 'error', message: 'Chat ID required for owner' }));
                 ws.close();
                 return;
               }
-              
-              chat = await storage.getChat(message.chatId);
-              if (!chat || chat.ownerId !== currentUserId || chat.propertyId !== message.propertyId) {
-                ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized chat access' }));
-                ws.close();
-                return;
-              }
-              
-              tenantId = chat.tenantId;
             } else {
               tenantId = currentUserId;
               chat = await storage.getChatByPropertyAndTenant(message.propertyId, tenantId);

@@ -133,7 +133,7 @@ export default function ChatPage() {
     .toUpperCase() || "O";
 
   // Check if owner is trying to access chat without chatId
-  const isPropertyOwner = isOwner(user);
+  const isPropertyOwner = isOwner(user) && property?.ownerId === user.id;
   const showOwnerError = isPropertyOwner && !chatId;
 
   if (showOwnerError) {
