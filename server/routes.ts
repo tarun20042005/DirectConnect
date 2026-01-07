@@ -327,8 +327,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/properties/saved/:userId", async (req, res) => {
+  app.get("/api/properties/saved/:userId", authenticateToken, async (req, res) => {
     try {
+      if (req.userId !== req.params.userId) {
+        return res.status(403).json({ message: "Unauthorized access to saved properties" });
+      }
       const savedProperties = await storage.getSavedProperties(req.params.userId);
       const propertyIds = savedProperties.map(sp => sp.propertyId);
 
