@@ -9,6 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SlidersHorizontal, Map, List, GitCompare } from "lucide-react";
+import { getAuthUser } from "@/lib/auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyMap } from "@/components/PropertyMap";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,14 +27,40 @@ export default function SearchResults() {
     return saved ? JSON.parse(saved).length : 0;
   });
 
-  const [priceRange, setPriceRange] = useState([0, 5000]);
-  const [bedrooms, setBedrooms] = useState("");
-  const [bathrooms, setBathrooms] = useState("");
+  const [priceRange, setPriceRange] = useState([0, 200000]);
+  const [bedrooms, setBedrooms] = useState("any");
+  const [bathrooms, setBathrooms] = useState("any");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
 
+  const { toast } = useToast();
+  const user = getAuthUser();
+
+  const savePropertyMutation = useMutation({
+    mutationFn: async (propertyId: string) => {
+      await apiRequest("POST", `/api/saved-properties`, { propertyId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
+      toast({ title: "Property saved!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
+    },
+  });
+
+  const { data: savedProperties } = useQuery<Property[]>({
+    queryKey: ["/api/properties/saved", user?.id],
+    enabled: !!user,
+  });
+
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
+  });
+
+  const { data: owners } = useQuery<User[]>({
+    queryKey: ["/api/owners"],
+    enabled: verifiedOnly,
   });
 
   const amenitiesOptions = [
@@ -51,8 +81,8 @@ export default function SearchResults() {
         <Slider
           value={priceRange}
           onValueChange={setPriceRange}
-          max={5000}
-          step={100}
+          max={200000}
+          step={1000}
           className="mb-2"
           data-testid="slider-price-range"
         />
@@ -136,10 +166,15 @@ export default function SearchResults() {
     if (bedrooms && bedrooms !== "any" && property.bedrooms < parseInt(bedrooms)) return false;
     if (bathrooms && bathrooms !== "any" && property.bathrooms < parseInt(bathrooms)) return false;
     if (selectedAmenities.length > 0) {
+      const propertyAmenities = Array.isArray(property.amenities) ? property.amenities : [];
       const hasAllAmenities = selectedAmenities.every(a => 
-        property.amenities?.includes(a)
+        propertyAmenities.includes(a)
       );
       if (!hasAllAmenities) return false;
+    }
+    if (verifiedOnly && owners) {
+      const owner = owners.find(o => o.id === property.ownerId);
+      if (!owner?.verified) return false;
     }
     return true;
   }) || [];
@@ -238,6 +273,8 @@ export default function SearchResults() {
                         <PropertyCard
                           property={property}
                           onClick={() => setLocation(`/property/${property.id}`)}
+                          isSaved={savedProperties?.some(p => p.id === property.id)}
+                          onSave={() => savePropertyMutation.mutate(property.id)}
                         />
                         <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-3 py-2 rounded-md">
                           <Checkbox

@@ -40,18 +40,8 @@ export interface IStorage {
   updateAppointment(id: string, appointment: Partial<Appointment>): Promise<Appointment | undefined>;
   
   getReviews(propertyId: string): Promise<Review[]>;
+  getUsersByRole(role: string): Promise<User[]>;
   createReview(review: InsertReview): Promise<Review>;
-  
-  getSavedProperties(userId: string): Promise<SavedProperty[]>;
-  createSavedProperty(savedProperty: InsertSavedProperty): Promise<SavedProperty>;
-  deleteSavedProperty(userId: string, propertyId: string): Promise<boolean>;
-
-  createOtp(otp: any): Promise<any>;
-  getOtpByUserAndCode(userId: string, code: string): Promise<any>;
-  verifyOtp(userId: string, code: string): Promise<boolean>;
-
-  createPayment(payment: any): Promise<any>;
-  getPayment(id: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -75,6 +65,10 @@ export class MemStorage implements IStorage {
     this.savedProperties = new Map();
     this.otpCodes = new Map();
     this.payments = new Map();
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    return Array.from(this.users.values()).filter(u => u.role === role);
   }
 
   async getUser(id: string): Promise<User | undefined> {

@@ -320,7 +320,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/reviews", authenticateToken, async (req, res) => {
     try {
-      const review = await storage.createReview(req.body);
+      if (!req.userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      const review = await storage.createReview({
+        ...req.body,
+        tenantId: req.userId
+      });
       res.status(201).json(review);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -349,9 +355,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/owners", async (req, res) => {
+    try {
+      const allUsers = await storage.getUsersByRole("owner");
+      res.json(allUsers.map(stripPassword));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/saved-properties", authenticateToken, async (req, res) => {
     try {
-      const saved = await storage.createSavedProperty(req.body);
+      if (!req.userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      const saved = await storage.createSavedProperty({
+        ...req.body,
+        userId: req.userId
+      });
       res.status(201).json(saved);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
