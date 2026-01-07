@@ -492,10 +492,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 tenantId = chat.tenantId;
               } else {
                 // If owner joins without chatId, they are likely just viewing the property chat list
-                // but for a specific property chat, they MUST provide chatId.
-                // However, let's make it more resilient.
-                ws.send(JSON.stringify({ type: 'error', message: 'Chat ID required for owner' }));
-                ws.close();
+                // for the property detail page or listing page.
+                // We should NOT close the connection if they just want to be updated on new chats
+                // but for a specific conversation, they need chatId.
+                // Let's just return for now without closing if they are the owner.
                 return;
               }
             } else {

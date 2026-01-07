@@ -143,11 +143,11 @@ export default function ChatPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertCircle className="h-12 w-12 text-amber-600 mb-4" />
             <h3 className="text-lg font-semibold mb-2">Access Chat from Messages</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              As a property owner, please access tenant messages from your Dashboard Messages tab to start chatting.
+            <p className="text-muted-foreground text-center mb-6">
+              As the owner of this property, you can view all your conversations in your dashboard messages tab.
             </p>
-            <Button onClick={() => setLocation("/dashboard")} data-testid="button-go-to-dashboard">
-              Go to Dashboard
+            <Button asChild>
+              <Link href="/dashboard">Go to Dashboard</Link>
             </Button>
           </CardContent>
         </Card>
