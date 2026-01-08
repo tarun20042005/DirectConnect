@@ -77,16 +77,25 @@ export default function ChatPage() {
       };
 
     socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "message") {
-        setMessages((prev) => [...prev, data.message]);
-      } else if (data.type === "history") {
-        setMessages(data.messages || []);
-        if (data.chatId && !chatId) {
-          setChatId(data.chatId);
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Received WebSocket message:", data);
+        if (data.type === "message") {
+          setMessages((prev) => {
+            // Prevent duplicate messages in the UI
+            if (prev.some(m => m.id === data.message.id)) return prev;
+            return [...prev, data.message];
+          });
+        } else if (data.type === "history") {
+          setMessages(data.messages || []);
+          if (data.chatId && !chatId) {
+            setChatId(data.chatId);
+          }
+        } else if (data.type === "error") {
+          toast({ title: "Chat error", description: data.message, variant: "destructive" });
         }
-      } else if (data.type === "error") {
-        toast({ title: "Chat error", description: data.message, variant: "destructive" });
+      } catch (err) {
+        console.error("Error parsing WebSocket message:", err);
       }
     };
 

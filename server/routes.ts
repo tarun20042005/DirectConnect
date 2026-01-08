@@ -552,9 +552,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (!chatRooms.has(roomId)) {
               chatRooms.set(roomId, new Set());
             }
-            chatRooms.get(roomId)!.add({ ws, userId: currentUserId });
+            // Remove any existing connection for this user in this room
+            const room = chatRooms.get(roomId)!;
+            room.forEach(client => {
+              if (client.userId === currentUserId) room.delete(client);
+            });
+            room.add({ ws, userId: currentUserId });
             
-            console.log(`User ${currentUserId} joined room ${roomId}. Room size: ${chatRooms.get(roomId)!.size}`);
+            console.log(`User ${currentUserId} joined room ${roomId}. Room size: ${room.size}`);
 
             const messages = await storage.getMessages(chat.id);
             if (ws.readyState === WebSocket.OPEN) {
@@ -572,6 +577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           let chatId = message.chatId;
+          console.log(`Received message content: "${message.content}" for chatId: ${chatId}`);
 
           if (!chatId) {
             // If tenant sends message without chatId, find or create it
@@ -583,6 +589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             let chat = await storage.getChatByPropertyAndTenant(currentPropertyId, currentUserId);
             if (!chat) {
+              console.log(`Creating new chat for property ${currentPropertyId} and tenant ${currentUserId}`);
               chat = await storage.createChat({
                 propertyId: currentPropertyId,
                 tenantId: currentUserId,
@@ -594,11 +601,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const chat = await storage.getChat(chatId);
           if (!chat) {
+            console.error(`Chat ${chatId} not found in database`);
             ws.send(JSON.stringify({ type: 'error', message: 'Chat not found' }));
             return;
           }
 
           if (chat.tenantId !== currentUserId && chat.ownerId !== currentUserId) {
+            console.error(`Unauthorized access attempt by ${currentUserId} to chat ${chatId}`);
             ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }));
             return;
           }

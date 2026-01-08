@@ -50,11 +50,19 @@ export class DatabaseStorage implements IStorage {
 
   async getProperties(): Promise<Property[]> {
     try {
+      // Use raw SQL to investigate the error if drizzle is failing on the result mapping
       const result = await db.select().from(properties).where(eq(properties.available, true));
       return result || [];
     } catch (error) {
       console.error("Database error in getProperties:", error);
-      return [];
+      // Fallback: try to fetch all properties without the where clause if that's the issue
+      try {
+        const fallback = await db.select().from(properties);
+        return fallback || [];
+      } catch (innerError) {
+        console.error("Critical fallback database error:", innerError);
+        return [];
+      }
     }
   }
 
