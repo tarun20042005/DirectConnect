@@ -282,48 +282,6 @@ export default function Dashboard() {
         )}
 
         {!isPropertyOwner && (
-          <TabsContent value="saved" className="mt-6">
-            {loadingProperties ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="aspect-video w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))}
-              </div>
-            ) : !properties || properties.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    No appointments yet
-                  </h3>
-                  <p className="text-muted-foreground text-center mb-4">
-                    Find a property and schedule a viewing
-                  </p>
-                  <Button onClick={() => setLocation("/search")}>
-                    Browse Properties
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {properties.map((property) => (
-                  <div key={property.id} className="relative">
-                    <PropertyCard
-                      property={property}
-                      onClick={() => setLocation(`/property/${property.id}`)}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        )}
-
-        {!isPropertyOwner && (
           <TabsContent value="available" className="mt-6">
             {loadingAllProperties ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
