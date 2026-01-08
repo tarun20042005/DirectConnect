@@ -33,30 +33,6 @@ export default function PropertyDetail() {
     enabled: !!property?.ownerId,
   });
 
-  const { data: savedProperties } = useQuery<Property[]>({
-    queryKey: ["/api/properties/saved", user?.id],
-    enabled: !!user,
-  });
-
-  const savePropertyMutation = useMutation({
-    mutationFn: async () => {
-      if (isSaved) {
-        await apiRequest("DELETE", `/api/saved-properties/${user?.id}/${id}`);
-      } else {
-        await apiRequest("POST", "/api/saved-properties", { propertyId: id, userId: user?.id });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
-      toast({ title: isSaved ? "Property removed from favorites" : "Property saved to favorites" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Action failed", variant: "destructive" });
-    },
-  });
-
-  const isSaved = savedProperties?.some(p => p.id === id);
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 md:px-6 py-8">
@@ -181,16 +157,6 @@ export default function PropertyDetail() {
                 <div className="flex gap-2">
                   <Button variant="outline" size="icon" data-testid="button-share">
                     <Share2 className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant={isSaved ? "default" : "outline"} 
-                    size="icon" 
-                    onClick={() => savePropertyMutation.mutate()}
-                    disabled={savePropertyMutation.isPending}
-                    className={isSaved ? "text-red-500 bg-red-50 hover:bg-red-100 border-red-200" : ""}
-                    data-testid="button-save-property"
-                  >
-                    <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
                   </Button>
                 </div>
               </div>
