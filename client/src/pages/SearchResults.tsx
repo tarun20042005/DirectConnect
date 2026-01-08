@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyMap } from "@/components/PropertyMap";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Property } from "@shared/schema";
+import type { Property, User } from "@shared/schema";
 
 export default function SearchResults() {
   const [, setLocation] = useLocation();
@@ -163,8 +163,8 @@ export default function SearchResults() {
   const filteredProperties = properties?.filter(property => {
     const price = parseFloat(property.price as string);
     if (price < priceRange[0] || price > priceRange[1]) return false;
-    if (bedrooms && bedrooms !== "any" && property.bedrooms < parseInt(bedrooms)) return false;
-    if (bathrooms && bathrooms !== "any" && property.bathrooms < parseInt(bathrooms)) return false;
+    if (bedrooms && bedrooms !== "any" && property.bedrooms != null && property.bedrooms < parseInt(bedrooms)) return false;
+    if (bathrooms && bathrooms !== "any" && property.bathrooms != null && property.bathrooms < parseInt(bathrooms)) return false;
     if (selectedAmenities.length > 0) {
       const propertyAmenities = Array.isArray(property.amenities) ? property.amenities : [];
       const hasAllAmenities = selectedAmenities.every(a => 
@@ -307,8 +307,7 @@ export default function SearchResults() {
                 ) : (
                   <PropertyMap
                     properties={filteredProperties}
-                    selectedProperty={selectedProperty}
-                    onPropertyClick={(property) => {
+                    onPropertyClick={(property: Property) => {
                       setSelectedProperty(property);
                       setLocation(`/property/${property.id}`);
                     }}
