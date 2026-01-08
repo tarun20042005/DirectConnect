@@ -274,16 +274,6 @@ export default function PropertyDetail() {
                   </Button>
                 ) : user ? (
                   <>
-                    {property.deposit && (
-                      <Button 
-                        className="w-full" 
-                        size="lg"
-                        onClick={() => setLocation(`/deposit/${property.id}`)}
-                        data-testid="button-pay-deposit"
-                      >
-                        Pay Deposit ₹{(parseInt(property.deposit) || 0).toLocaleString('en-IN')}
-                      </Button>
-                    )}
                     <Button 
                       className="w-full" 
                       size="lg"

@@ -396,34 +396,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments/deposit", authenticateToken, async (req, res) => {
-    try {
-      const { propertyId, amount } = req.body;
-      
-      if (!propertyId || !amount) {
-        return res.status(400).json({ message: "Property ID and amount are required" });
-      }
-
-      if (!req.userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      const payment = await storage.createPayment({
-        tenantId: req.userId,
-        propertyId,
-        amount: parseFloat(amount),
-        currency: "INR",
-        type: "deposit",
-        description: `Deposit for property ${propertyId}`,
-        status: "completed",
-      });
-
-      res.json(payment);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   const httpServer = createServer(app);
 
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });

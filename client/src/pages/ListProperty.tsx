@@ -22,7 +22,6 @@ import kitchenImage from "@assets/generated_images/modern_kitchen_interior.png";
 import bedroomImage from "@assets/generated_images/bedroom_interior_photography.png";
 
 const listingSchema = insertPropertySchema.extend({
-  deposit: z.string().optional(),
   sqft: z.string().optional(),
 });
 
@@ -65,7 +64,6 @@ export default function ListProperty() {
       description: "",
       propertyType: "apartment",
       price: "",
-      deposit: "",
       bedrooms: 1,
       bathrooms: 1,
       sqft: "",
@@ -341,26 +339,6 @@ export default function ListProperty() {
                                     placeholder="50000"
                                     className="h-11"
                                     data-testid="input-price"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="deposit"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-base">Deposit (₹)</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="100000"
-                                    className="h-11"
-                                    data-testid="input-deposit"
                                     {...field}
                                   />
                                 </FormControl>

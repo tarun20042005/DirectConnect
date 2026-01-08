@@ -197,14 +197,4 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(otpCodes.userId, userId), eq(otpCodes.code, code)));
     return result.rowCount > 0;
   }
-
-  async createPayment(payment: any): Promise<any> {
-    const result = await db.insert(payments).values(payment).returning();
-    return result[0];
-  }
-
-  async getPayment(id: string): Promise<any> {
-    const result = await db.select().from(payments).where(eq(payments.id, id));
-    return result[0];
-  }
 }

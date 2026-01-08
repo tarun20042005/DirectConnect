@@ -21,7 +21,6 @@ import type { Property } from "@shared/schema";
 import { Image as ImageIcon, X, ArrowLeft } from "lucide-react";
 
 const editingSchema = insertPropertySchema.extend({
-  deposit: z.string().optional(),
   sqft: z.string().optional(),
 });
 
@@ -82,7 +81,6 @@ export default function EditProperty() {
         description: property.description,
         propertyType: property.propertyType,
         price: property.price?.toString() || "",
-        deposit: property.deposit?.toString() || "",
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
         sqft: property.sqft?.toString() || "",
@@ -370,25 +368,6 @@ export default function EditProperty() {
                               type="number"
                               placeholder="50000"
                               data-testid="input-price"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="deposit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Deposit (₹)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="100000"
-                              data-testid="input-deposit"
                               {...field}
                             />
                           </FormControl>

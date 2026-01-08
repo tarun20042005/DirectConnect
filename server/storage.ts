@@ -305,17 +305,6 @@ export class MemStorage implements IStorage {
     }
     return false;
   }
-
-  async createPayment(payment: any): Promise<any> {
-    const id = randomUUID();
-    const paymentEntry = { ...payment, id, createdAt: new Date() };
-    this.payments.set(id, paymentEntry);
-    return paymentEntry;
-  }
-
-  async getPayment(id: string): Promise<any> {
-    return Array.from(this.payments.values()).find((p: any) => p.id === id);
-  }
 }
 
 // Use database storage for persistent data
