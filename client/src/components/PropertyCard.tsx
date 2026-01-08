@@ -8,11 +8,9 @@ import { useState } from "react";
 interface PropertyCardProps {
   property: Property;
   onClick?: () => void;
-  onSave?: () => void;
-  isSaved?: boolean;
 }
 
-export function PropertyCard({ property, onClick, onSave, isSaved }: PropertyCardProps) {
+export function PropertyCard({ property, onClick }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = property.images || [];
 
@@ -37,20 +35,6 @@ export function PropertyCard({ property, onClick, onSave, isSaved }: PropertyCar
               <ShieldCheck className="h-3 w-3 text-primary" />
               <span>Verified</span>
             </div>
-          )}
-          {onSave && (
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-8 w-8 rounded-full shadow-lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSave();
-              }}
-              data-testid={`button-save-${property.id}`}
-            >
-              <Heart className={`h-4 w-4 ${isSaved ? 'fill-current text-red-500' : ''}`} />
-            </Button>
           )}
         </div>
 

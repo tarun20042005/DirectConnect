@@ -49,7 +49,7 @@ export default function Dashboard() {
   });
 
   const { data: properties, isLoading: loadingProperties } = useQuery<Property[]>({
-    queryKey: isPropertyOwner ? ["/api/properties/owner", user?.id] : ["/api/properties/saved", user?.id],
+    queryKey: isPropertyOwner ? ["/api/properties/owner", user?.id] : ["/api/appointments", user?.id],
     enabled: !!user,
   });
 
@@ -58,37 +58,9 @@ export default function Dashboard() {
     enabled: !isPropertyOwner,
   });
 
-  const { data: savedProperties } = useQuery<Property[]>({
-    queryKey: ["/api/properties/saved", user?.id],
-    enabled: !!user && !isPropertyOwner,
-  });
-
-  const { data: chats, isLoading: loadingChats } = useQuery<Chat[]>({
-    queryKey: isPropertyOwner ? ["/api/chats/owner", user?.id] : ["/api/chats/tenant", user?.id],
-    enabled: !!user,
-  });
-
-  const { data: chatUsers } = useQuery<Record<string, User>>({
-    queryKey: ["/api/chats/users"],
-    enabled: !!user,
-  });
-
   const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({
     queryKey: isPropertyOwner ? ["/api/appointments/owner", user?.id] : ["/api/appointments", user?.id],
     enabled: !!user,
-  });
-
-  const savePropertyMutation = useMutation({
-    mutationFn: async (propertyId: string) => {
-      await apiRequest("POST", `/api/saved-properties`, { propertyId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
-      toast({ title: "Property saved!" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
-    },
   });
 
   const appointmentStatusMutation = useMutation({
@@ -119,12 +91,6 @@ export default function Dashboard() {
       color: "text-green-500",
     },
   ] : [
-    {
-      title: "Saved Properties",
-      value: properties?.length || 0,
-      icon: Heart,
-      color: "text-red-500",
-    },
     {
       title: "Scheduled Appointments",
       value: appointments?.length || 0,
@@ -184,11 +150,10 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <Tabs defaultValue={isPropertyOwner ? "listings" : "saved"} className="space-y-6" data-testid="tabs-dashboard">
+      <Tabs defaultValue={isPropertyOwner ? "listings" : "available"} className="space-y-6" data-testid="tabs-dashboard">
         <TabsList data-testid="tabs-list-dashboard">
           {isPropertyOwner && <TabsTrigger value="listings" data-testid="tab-listings">My Listings</TabsTrigger>}
           {isPropertyOwner && <TabsTrigger value="messages" data-testid="tab-messages">Messages</TabsTrigger>}
-          {!isPropertyOwner && <TabsTrigger value="saved" data-testid="tab-saved-properties">Saved Properties</TabsTrigger>}
           {!isPropertyOwner && <TabsTrigger value="available" data-testid="tab-browse-properties">Browse Properties</TabsTrigger>}
           <TabsTrigger value="appointments" data-testid="tab-appointments">Appointments</TabsTrigger>
         </TabsList>
@@ -331,12 +296,12 @@ export default function Dashboard() {
             ) : !properties || properties.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Heart className="h-12 w-12 text-muted-foreground mb-4" />
+                  <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">
-                    No saved properties
+                    No appointments yet
                   </h3>
                   <p className="text-muted-foreground text-center mb-4">
-                    Start browsing and save your favorite properties
+                    Find a property and schedule a viewing
                   </p>
                   <Button onClick={() => setLocation("/search")}>
                     Browse Properties
@@ -385,8 +350,6 @@ export default function Dashboard() {
                     key={property.id}
                     property={property}
                     onClick={() => setLocation(`/property/${property.id}`)}
-                    isSaved={savedProperties?.some(p => p.id === property.id)}
-                    onSave={() => savePropertyMutation.mutate(property.id)}
                   />
                 ))}
               </div>

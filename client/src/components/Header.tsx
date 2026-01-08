@@ -85,17 +85,7 @@ export function Header() {
                     <Plus className="h-4 w-4 mr-2" />
                     List Property
                   </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    onClick={() => setLocation("/saved")}
-                    className="hidden md:flex"
-                    data-testid="button-saved"
-                  >
-                    <Heart className="h-4 w-4 mr-2" />
-                    Saved
-                  </Button>
-                )}
+                ) : null}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -120,10 +110,6 @@ export function Header() {
                     </DropdownMenuItem>
                     {!isOwner(user) && (
                       <>
-                        <DropdownMenuItem onClick={() => setLocation("/saved")} data-testid="menu-saved">
-                          <Heart className="mr-2 h-4 w-4" />
-                          Saved Properties
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation("/appointments")} data-testid="menu-appointments">
                           <Calendar className="mr-2 h-4 w-4" />
                           My Appointments

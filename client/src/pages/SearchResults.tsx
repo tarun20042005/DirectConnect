@@ -36,24 +36,6 @@ export default function SearchResults() {
   const { toast } = useToast();
   const user = getAuthUser();
 
-  const savePropertyMutation = useMutation({
-    mutationFn: async (propertyId: string) => {
-      await apiRequest("POST", `/api/saved-properties`, { propertyId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/properties/saved", user?.id] });
-      toast({ title: "Property saved!" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to save property", variant: "destructive" });
-    },
-  });
-
-  const { data: savedProperties } = useQuery<Property[]>({
-    queryKey: ["/api/properties/saved", user?.id],
-    enabled: !!user,
-  });
-
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
   });
@@ -279,8 +261,6 @@ export default function SearchResults() {
                         <PropertyCard
                           property={property}
                           onClick={() => setLocation(`/property/${property.id}`)}
-                          isSaved={savedProperties?.some(p => p.id === property.id)}
-                          onSave={() => savePropertyMutation.mutate(property.id)}
                         />
                         <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-3 py-2 rounded-md">
                           <Checkbox
