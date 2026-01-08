@@ -163,8 +163,14 @@ export default function SearchResults() {
   const filteredProperties = properties?.filter(property => {
     const price = parseFloat(property.price as string);
     if (price < priceRange[0] || price > priceRange[1]) return false;
-    if (bedrooms && bedrooms !== "any" && property.bedrooms != null && property.bedrooms < parseInt(bedrooms)) return false;
-    if (bathrooms && bathrooms !== "any" && property.bathrooms != null && property.bathrooms < parseInt(bathrooms)) return false;
+    if (bedrooms && bedrooms !== "any") {
+      const bCount = parseInt(bedrooms);
+      if (!isNaN(bCount) && (property.bedrooms == null || property.bedrooms < bCount)) return false;
+    }
+    if (bathrooms && bathrooms !== "any") {
+      const bCount = parseInt(bathrooms);
+      if (!isNaN(bCount) && (property.bathrooms == null || property.bathrooms < bCount)) return false;
+    }
     if (selectedAmenities.length > 0) {
       const propertyAmenities = Array.isArray(property.amenities) ? property.amenities : [];
       const hasAllAmenities = selectedAmenities.every(a => 
