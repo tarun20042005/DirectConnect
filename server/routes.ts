@@ -333,47 +333,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/properties/saved/:userId", authenticateToken, async (req, res) => {
-    try {
-      if (req.userId !== req.params.userId) {
-        return res.status(403).json({ message: "Unauthorized access to saved properties" });
-      }
-      const savedProperties = await storage.getSavedProperties(req.params.userId);
-      const propertyIds = savedProperties.map(sp => sp.propertyId);
-
-      const properties = [];
-      for (const id of propertyIds) {
-        const property = await storage.getProperty(id);
-        if (property) {
-          properties.push(property);
-        }
-      }
-
-      res.json(properties);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   app.get("/api/owners", async (req, res) => {
     try {
       const allUsers = await storage.getUsersByRole("owner");
       res.json(allUsers.map(stripPassword));
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/saved-properties", authenticateToken, async (req, res) => {
-    try {
-      if (!req.userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-      const saved = await storage.createSavedProperty({
-        ...req.body,
-        userId: req.userId
-      });
-      res.status(201).json(saved);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -428,18 +391,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       res.json(users);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.delete("/api/saved-properties/:userId/:propertyId", authenticateToken, async (req, res) => {
-    try {
-      const deleted = await storage.deleteSavedProperty(req.params.userId, req.params.propertyId);
-      if (!deleted) {
-        return res.status(404).json({ message: "Saved property not found" });
-      }
-      res.json({ message: "Property unsaved" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

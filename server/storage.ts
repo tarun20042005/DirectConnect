@@ -4,8 +4,7 @@ import {
   type Chat, type InsertChat,
   type Message, type InsertMessage,
   type Appointment, type InsertAppointment,
-  type Review, type InsertReview,
-  type SavedProperty, type InsertSavedProperty
+  type Review, type InsertReview
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -17,7 +16,7 @@ export interface IStorage {
   checkEmailExists(email: string): Promise<boolean>;
   
   getProperty(id: string): Promise<Property | undefined>;
-  getProperties(): Promise<Property[]>;
+  getProperties(filters?: any): Promise<Property[]>;
   getPropertiesByOwner(ownerId: string): Promise<Property[]>;
   createProperty(property: InsertProperty): Promise<Property>;
   updateProperty(id: string, property: Partial<Property>): Promise<Property | undefined>;
@@ -52,7 +51,6 @@ export class MemStorage implements IStorage {
   private messages: Map<string, Message>;
   private appointments: Map<string, Appointment>;
   private reviews: Map<string, Review>;
-  private savedProperties: Map<string, SavedProperty>;
   private otpCodes: Map<string, any>;
   private payments: Map<string, any>;
 
@@ -63,7 +61,6 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.appointments = new Map();
     this.reviews = new Map();
-    this.savedProperties = new Map();
     this.otpCodes = new Map();
     this.payments = new Map();
   }
@@ -247,7 +244,7 @@ export class MemStorage implements IStorage {
 
   async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
     const id = randomUUID();
-    const appointment: Appointment = {
+    const appointmentObj: Appointment = {
       id,
       propertyId: insertAppointment.propertyId,
       tenantId: insertAppointment.tenantId,
@@ -257,8 +254,8 @@ export class MemStorage implements IStorage {
       message: insertAppointment.message || null,
       createdAt: new Date(),
     };
-    this.appointments.set(id, appointment);
-    return appointment;
+    this.appointments.set(id, appointmentObj);
+    return appointmentObj;
   }
 
   async updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined> {
@@ -285,33 +282,6 @@ export class MemStorage implements IStorage {
     };
     this.reviews.set(id, review);
     return review;
-  }
-
-  async getSavedProperties(userId: string): Promise<SavedProperty[]> {
-    return Array.from(this.savedProperties.values()).filter(
-      (saved) => saved.userId === userId,
-    );
-  }
-
-  async createSavedProperty(insertSavedProperty: InsertSavedProperty): Promise<SavedProperty> {
-    const id = randomUUID();
-    const savedProperty: SavedProperty = {
-      ...insertSavedProperty,
-      id,
-      createdAt: new Date(),
-    };
-    this.savedProperties.set(id, savedProperty);
-    return savedProperty;
-  }
-
-  async deleteSavedProperty(userId: string, propertyId: string): Promise<boolean> {
-    const saved = Array.from(this.savedProperties.values()).find(
-      (s) => s.userId === userId && s.propertyId === propertyId,
-    );
-    if (saved) {
-      return this.savedProperties.delete(saved.id);
-    }
-    return false;
   }
 
   async createOtp(otp: any): Promise<any> {
@@ -351,5 +321,3 @@ export class MemStorage implements IStorage {
 // Use database storage for persistent data
 import { DatabaseStorage } from "./storage-db";
 export const storage = new DatabaseStorage();
-// export { DatabaseStorage as storage } from "./storage-db";
-// export const storage = new MemStorage();

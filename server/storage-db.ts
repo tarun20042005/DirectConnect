@@ -5,13 +5,12 @@ import {
   type Message, type InsertMessage,
   type Appointment, type InsertAppointment,
   type Review, type InsertReview,
-  type SavedProperty, type InsertSavedProperty,
-  users, properties, chats, messages, appointments, reviews, savedProperties,
+  users, properties, chats, messages, appointments, reviews,
   otpCodes, payments
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import type { IStorage } from "./storage";
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -48,16 +47,26 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getProperties(): Promise<Property[]> {
+  async getProperties(filters: any = {}): Promise<Property[]> {
     try {
-      // Use raw SQL to investigate the error if drizzle is failing on the result mapping
-      const result = await db.select().from(properties).where(eq(properties.available, true));
+      let query = db.select().from(properties);
+      
+      const conditions: any[] = [];
+      if (filters.city) conditions.push(eq(properties.city, filters.city));
+      if (filters.bedrooms && filters.bedrooms !== "any") conditions.push(gte(properties.bedrooms, parseInt(filters.bedrooms)));
+      if (filters.bathrooms && filters.bathrooms !== "any") conditions.push(gte(properties.bathrooms, parseInt(filters.bathrooms)));
+      if (filters.propertyType && filters.propertyType !== "any") conditions.push(eq(properties.propertyType, filters.propertyType));
+      
+      conditions.push(eq(properties.available, true));
+      
+      query = query.where(and(...conditions));
+      
+      const result = await query;
       return result || [];
     } catch (error) {
       console.error("Database error in getProperties:", error);
-      // Fallback: try to fetch all properties without the where clause if that's the issue
       try {
-        const fallback = await db.select().from(properties);
+        const fallback = await db.select().from(properties).where(eq(properties.available, true));
         return fallback || [];
       } catch (innerError) {
         console.error("Critical fallback database error:", innerError);
@@ -166,21 +175,6 @@ export class DatabaseStorage implements IStorage {
   async createReview(review: InsertReview): Promise<Review> {
     const result = await db.insert(reviews).values(review).returning();
     return result[0];
-  }
-
-  async getSavedProperties(userId: string): Promise<SavedProperty[]> {
-    return await db.select().from(savedProperties).where(eq(savedProperties.userId, userId));
-  }
-
-  async createSavedProperty(savedProperty: InsertSavedProperty): Promise<SavedProperty> {
-    const result = await db.insert(savedProperties).values(savedProperty).returning();
-    return result[0];
-  }
-
-  async deleteSavedProperty(userId: string, propertyId: string): Promise<boolean> {
-    const result = await db.delete(savedProperties)
-      .where(and(eq(savedProperties.userId, userId), eq(savedProperties.propertyId, propertyId)));
-    return result.rowCount > 0;
   }
 
   async createOtp(otp: any): Promise<any> {
