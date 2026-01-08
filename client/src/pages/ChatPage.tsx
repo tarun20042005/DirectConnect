@@ -122,6 +122,7 @@ export default function ChatPage() {
       content: message.trim(),
     };
 
+    console.log("Sending message:", newMessage);
     wsRef.current.send(JSON.stringify(newMessage));
     setMessage("");
   };

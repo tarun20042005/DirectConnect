@@ -64,8 +64,8 @@ export default function Dashboard() {
   });
 
   const { data: chats, isLoading: loadingChats } = useQuery<Chat[]>({
-    queryKey: ["/api/chats/owner", user?.id],
-    enabled: isPropertyOwner && !!user,
+    queryKey: isPropertyOwner ? ["/api/chats/owner", user?.id] : ["/api/chats/tenant", user?.id],
+    enabled: !!user,
   });
 
   const { data: chatUsers } = useQuery<Record<string, User>>({

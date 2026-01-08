@@ -100,6 +100,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(chats).where(eq(chats.ownerId, ownerId));
   }
 
+  async getChatsByTenant(tenantId: string): Promise<Chat[]> {
+    return await db.select().from(chats).where(eq(chats.tenantId, tenantId));
+  }
+
   async createChat(chat: InsertChat): Promise<Chat> {
     const result = await db.insert(chats).values(chat).returning();
     return result[0];

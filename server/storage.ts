@@ -27,6 +27,7 @@ export interface IStorage {
   getChat(id: string): Promise<Chat | undefined>;
   getChatByPropertyAndTenant(propertyId: string, tenantId: string): Promise<Chat | undefined>;
   getChatsByOwner(ownerId: string): Promise<Chat[]>;
+  getChatsByTenant(tenantId: string): Promise<Chat[]>;
   createChat(chat: InsertChat): Promise<Chat>;
   
   getMessages(chatId: string): Promise<Message[]>;
@@ -188,6 +189,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.chats.values()).filter(
       (chat) => chat.ownerId === ownerId,
     );
+  }
+
+  async getChatsByTenant(tenantId: string): Promise<Chat[]> {
+    return Array.from(this.chats.values()).filter((c) => c.tenantId === tenantId);
   }
 
   async createChat(insertChat: InsertChat): Promise<Chat> {

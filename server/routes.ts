@@ -379,6 +379,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/chats/tenant/:tenantId", authenticateToken, async (req, res) => {
+    try {
+      if (req.userId !== req.params.tenantId) {
+        return res.status(403).json({ message: "Unauthorized access to chats" });
+      }
+      const chats = await storage.getChatsByTenant(req.params.tenantId);
+      res.json(chats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/chats/owner/:ownerId", authenticateToken, async (req, res) => {
     try {
       // Security check: only allow owners to fetch their own chats
@@ -394,9 +406,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chats/users", authenticateToken, async (req, res) => {
     try {
-      const chats = await storage.getChatsByOwner(req.userId!);
-      const tenantIds = Array.from(new Set(chats.map(c => c.tenantId)));
-      const ownerIds = Array.from(new Set(chats.map(c => c.ownerId)));
+      const user = await storage.getUser(req.userId!);
+      let allChats: Chat[] = [];
+      
+      if (user?.role === 'owner') {
+        allChats = await storage.getChatsByOwner(req.userId!);
+      } else {
+        allChats = await storage.getChatsByTenant(req.userId!);
+      }
+      
+      const tenantIds = Array.from(new Set(allChats.map(c => c.tenantId)));
+      const ownerIds = Array.from(new Set(allChats.map(c => c.ownerId)));
       const allUserIds = Array.from(new Set([...tenantIds, ...ownerIds]));
       
       const users: Record<string, any> = {};
@@ -487,7 +507,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             currentUserId = user.id;
-            currentPropertyId = message.propertyId;
             authenticated = true;
 
             const property = await storage.getProperty(message.propertyId);
@@ -497,47 +516,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return;
             }
 
-            const isOwner = currentUserId === property.ownerId;
+            currentPropertyId = property.id;
             
             let chat: Chat | undefined;
             let tenantId: string;
 
-            if (isOwner) {
+            if (user.role === 'owner') {
               if (message.chatId) {
                 chat = await storage.getChat(message.chatId);
-                if (!chat || chat.ownerId !== currentUserId || chat.propertyId !== message.propertyId) {
+                if (!chat || chat.ownerId !== currentUserId) {
                   ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized chat access' }));
                   ws.close();
                   return;
                 }
                 tenantId = chat.tenantId;
               } else {
-                // If owner joins without chatId, they are likely just viewing the property chat list
-                // for the property detail page or listing page.
-                // We should NOT close the connection if they just want to be updated on new chats
-                // but for a specific conversation, they need chatId.
-                // Let's just return for now without closing if they are the owner.
+                // Owner joining without a specific chatId (maybe just viewing property chats)
                 return;
               }
             } else {
               tenantId = currentUserId;
-              chat = await storage.getChatByPropertyAndTenant(message.propertyId, tenantId);
+              chat = await storage.getChatByPropertyAndTenant(currentPropertyId, tenantId);
               
               if (!chat) {
                 chat = await storage.createChat({
-                  propertyId: message.propertyId,
+                  propertyId: currentPropertyId,
                   tenantId: tenantId,
                   ownerId: property.ownerId,
                 });
               }
             }
 
-            const roomId = `${message.propertyId}-${tenantId}`;
+            const roomId = `${currentPropertyId}-${tenantId}`;
             
             if (!chatRooms.has(roomId)) {
               chatRooms.set(roomId, new Set());
             }
             chatRooms.get(roomId)!.add({ ws, userId: currentUserId });
+            
+            console.log(`User ${currentUserId} joined room ${roomId}. Room size: ${chatRooms.get(roomId)!.size}`);
 
             const messages = await storage.getMessages(chat.id);
             if (ws.readyState === WebSocket.OPEN) {
@@ -594,9 +611,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const roomId = `${chat.propertyId}-${chat.tenantId}`;
           const room = chatRooms.get(roomId);
+          console.log(`Sending message to room ${roomId}. Room exists: ${!!room}, Room size: ${room?.size || 0}`);
           if (room) {
             room.forEach((client) => {
               if (client.ws.readyState === WebSocket.OPEN) {
+                console.log(`Sending message to user ${client.userId} in room ${roomId}`);
                 client.ws.send(JSON.stringify({ type: 'message', message: savedMessage }));
               }
             });
