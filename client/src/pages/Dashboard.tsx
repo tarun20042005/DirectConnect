@@ -170,8 +170,49 @@ export default function Dashboard() {
           {isPropertyOwner && <TabsTrigger value="listings" data-testid="tab-listings">My Listings</TabsTrigger>}
           {isPropertyOwner && <TabsTrigger value="messages" data-testid="tab-messages">Messages</TabsTrigger>}
           {!isPropertyOwner && <TabsTrigger value="available" data-testid="tab-browse-properties">Browse Properties</TabsTrigger>}
+          {!isPropertyOwner && <TabsTrigger value="saved" data-testid="tab-saved-properties">Saved Properties</TabsTrigger>}
           <TabsTrigger value="appointments" data-testid="tab-appointments">Appointments</TabsTrigger>
         </TabsList>
+
+        {!isPropertyOwner && (
+          <TabsContent value="saved" className="mt-6">
+            {loadingSaved ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-video w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : !savedProperties || savedProperties.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Heart className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No saved properties</h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Save properties you like to view them later
+                  </p>
+                  <Button onClick={() => setLocation("/search")}>
+                    Browse Properties
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {savedProperties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onClick={() => setLocation(`/property/${property.id}`)}
+                    showDeleteSaved={true}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )}
 
         {isPropertyOwner && (
           <TabsContent value="listings" className="mt-6">

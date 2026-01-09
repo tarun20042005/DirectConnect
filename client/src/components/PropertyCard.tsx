@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Bed, Bath, Square, Heart, ShieldCheck } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, ShieldCheck, Trash2 } from "lucide-react";
 import type { Property } from "@shared/schema";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -12,9 +12,10 @@ import { getAuthUser } from "@/lib/auth";
 interface PropertyCardProps {
   property: Property;
   onClick?: () => void;
+  showDeleteSaved?: boolean;
 }
 
-export function PropertyCard({ property, onClick }: PropertyCardProps) {
+export function PropertyCard({ property, onClick, showDeleteSaved }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = property.images || [];
   const { toast } = useToast();
@@ -48,6 +49,11 @@ export function PropertyCard({ property, onClick }: PropertyCardProps) {
     toggleSaveMutation.mutate();
   };
 
+  const handleDeleteSaved = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleSaveMutation.mutate();
+  };
+
   return (
     <Card 
       className="overflow-hidden hover-elevate cursor-pointer transition-all group"
@@ -64,7 +70,18 @@ export function PropertyCard({ property, onClick }: PropertyCardProps) {
         )}
 
         <div className="absolute top-3 right-3 flex gap-2">
-          {user && (
+          {showDeleteSaved ? (
+            <Button
+              size="icon"
+              variant="destructive"
+              className="h-8 w-8 shadow-lg z-10"
+              onClick={handleDeleteSaved}
+              disabled={toggleSaveMutation.isPending}
+              data-testid={`button-delete-saved-${property.id}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          ) : user && (
             <Button
               size="icon"
               variant="secondary"
