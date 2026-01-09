@@ -130,7 +130,6 @@ export default function ListProperty() {
       const propertyData = {
         ...data,
         price: data.price.toString(),
-        deposit: data.deposit ? data.deposit.toString() : null,
         sqft: data.sqft ? parseInt(data.sqft) : null,
         available: true,
       };

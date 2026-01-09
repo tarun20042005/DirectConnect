@@ -56,7 +56,6 @@ export default function EditProperty() {
       description: "",
       propertyType: "apartment",
       price: "",
-      deposit: "",
       bedrooms: 1,
       bathrooms: 1,
       sqft: "",
@@ -144,7 +143,6 @@ export default function EditProperty() {
       const propertyData = {
         ...data,
         price: data.price.toString(),
-        deposit: data.deposit ? data.deposit.toString() : null,
         sqft: data.sqft ? parseInt(data.sqft) : null,
         available: data.available ?? true,
       };

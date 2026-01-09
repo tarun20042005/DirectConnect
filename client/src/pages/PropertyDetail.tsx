@@ -237,11 +237,6 @@ export default function PropertyDetail() {
                 <CardTitle className="text-3xl font-bold text-primary">
                   ₹{property.price}<span className="text-base font-normal text-muted-foreground">/month</span>
                 </CardTitle>
-                {property.deposit && (
-                  <p className="text-sm text-muted-foreground">
-                    Deposit: ₹{property.deposit}
-                  </p>
-                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 {owner && (
