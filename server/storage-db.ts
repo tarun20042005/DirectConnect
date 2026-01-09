@@ -5,12 +5,13 @@ import {
   type Message, type InsertMessage,
   type Appointment, type InsertAppointment,
   type Review, type InsertReview,
+  type SavedProperty, type InsertSavedProperty,
   users, properties, chats, messages, appointments, reviews,
-  otpCodes, payments
+  otpCodes, savedProperties
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, inArray } from "drizzle-orm";
 import type { IStorage } from "./storage";
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -99,6 +100,34 @@ export class DatabaseStorage implements IStorage {
     if (property) {
       await this.updateProperty(id, { views: (property.views || 0) + 1 });
     }
+  }
+
+  async getSavedProperties(userId: string): Promise<Property[]> {
+    const saved = await db.select().from(savedProperties).where(eq(savedProperties.userId, userId));
+    const ids = saved.map(s => s.propertyId);
+    if (ids.length === 0) return [];
+    return await db.select().from(properties).where(inArray(properties.id, ids));
+  }
+
+  async toggleSavedProperty(userId: string, propertyId: string): Promise<boolean> {
+    const existing = await db.select().from(savedProperties)
+      .where(and(eq(savedProperties.userId, userId), eq(savedProperties.propertyId, propertyId)))
+      .limit(1);
+    
+    if (existing[0]) {
+      await db.delete(savedProperties).where(eq(savedProperties.id, existing[0].id));
+      return false;
+    }
+    
+    await db.insert(savedProperties).values({ userId, propertyId });
+    return true;
+  }
+
+  async isPropertySaved(userId: string, propertyId: string): Promise<boolean> {
+    const existing = await db.select().from(savedProperties)
+      .where(and(eq(savedProperties.userId, userId), eq(savedProperties.propertyId, propertyId)))
+      .limit(1);
+    return !!existing[0];
   }
 
   async getChat(id: string): Promise<Chat | undefined> {

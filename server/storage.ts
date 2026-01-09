@@ -23,6 +23,10 @@ export interface IStorage {
   deleteProperty(id: string): Promise<boolean>;
   incrementPropertyViews(id: string): Promise<void>;
   
+  getSavedProperties(userId: string): Promise<Property[]>;
+  toggleSavedProperty(userId: string, propertyId: string): Promise<boolean>;
+  isPropertySaved(userId: string, propertyId: string): Promise<boolean>;
+  
   getChat(id: string): Promise<Chat | undefined>;
   getChatByPropertyAndTenant(propertyId: string, tenantId: string): Promise<Chat | undefined>;
   getChatsByOwner(ownerId: string): Promise<Chat[]>;
@@ -51,6 +55,7 @@ export class MemStorage implements IStorage {
   private messages: Map<string, Message>;
   private appointments: Map<string, Appointment>;
   private reviews: Map<string, Review>;
+  private savedProperties: Map<string, any>;
   private otpCodes: Map<string, any>;
   private payments: Map<string, any>;
 
@@ -61,6 +66,7 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.appointments = new Map();
     this.reviews = new Map();
+    this.savedProperties = new Map();
     this.otpCodes = new Map();
     this.payments = new Map();
   }
@@ -170,6 +176,30 @@ export class MemStorage implements IStorage {
       property.views = (property.views || 0) + 1;
       this.properties.set(id, property);
     }
+  }
+
+  async getSavedProperties(userId: string): Promise<Property[]> {
+    const savedIds = Array.from(this.savedProperties.values())
+      .filter(s => s.userId === userId)
+      .map(s => s.propertyId);
+    return Array.from(this.properties.values()).filter(p => savedIds.includes(p.id));
+  }
+
+  async toggleSavedProperty(userId: string, propertyId: string): Promise<boolean> {
+    const existing = Array.from(this.savedProperties.values())
+      .find(s => s.userId === userId && s.propertyId === propertyId);
+    if (existing) {
+      this.savedProperties.delete(existing.id);
+      return false;
+    }
+    const id = randomUUID();
+    this.savedProperties.set(id, { id, userId, propertyId, createdAt: new Date() });
+    return true;
+  }
+
+  async isPropertySaved(userId: string, propertyId: string): Promise<boolean> {
+    return !!Array.from(this.savedProperties.values())
+      .find(s => s.userId === userId && s.propertyId === propertyId);
   }
 
   async getChat(id: string): Promise<Chat | undefined> {

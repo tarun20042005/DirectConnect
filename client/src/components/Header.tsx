@@ -67,6 +67,16 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setLocation("/dashboard")}
+              data-testid="button-saved-properties"
+              aria-label="Saved properties"
+            >
+              <Heart className="h-5 w-5" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
               data-testid="button-theme-toggle"
               aria-label="Toggle theme"

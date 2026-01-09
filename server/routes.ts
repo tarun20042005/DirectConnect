@@ -264,6 +264,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/saved-properties", authenticateToken, async (req, res) => {
+    try {
+      const saved = await storage.getSavedProperties(req.userId!);
+      res.json(saved);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/saved-properties/toggle", authenticateToken, async (req, res) => {
+    try {
+      const { propertyId } = req.body;
+      const saved = await storage.toggleSavedProperty(req.userId!, propertyId);
+      res.json({ saved });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/saved-properties/check/:propertyId", authenticateToken, async (req, res) => {
+    try {
+      const saved = await storage.isPropertySaved(req.userId!, req.params.propertyId);
+      res.json({ saved });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/appointments/:userId", async (req, res) => {
     try {
       const appointments = await storage.getAppointmentsByUser(req.params.userId);

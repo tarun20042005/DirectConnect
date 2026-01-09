@@ -4,6 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Bed, Bath, Square, Heart, ShieldCheck } from "lucide-react";
 import type { Property } from "@shared/schema";
 import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { getAuthUser } from "@/lib/auth";
 
 interface PropertyCardProps {
   property: Property;
@@ -13,6 +17,36 @@ interface PropertyCardProps {
 export function PropertyCard({ property, onClick }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = property.images || [];
+  const { toast } = useToast();
+  const user = getAuthUser();
+
+  const { data: savedStatus } = useQuery<{ saved: boolean }>({
+    queryKey: ["/api/saved-properties/check", property.id],
+    enabled: !!user,
+  });
+
+  const toggleSaveMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/saved-properties/toggle", { propertyId: property.id });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-properties/check", property.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-properties"] });
+      toast({
+        title: data.saved ? "Property saved" : "Property removed",
+        description: data.saved ? "You can find this in your saved properties." : "Property has been removed from your saved list.",
+      });
+    },
+  });
+
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      toast({ title: "Please sign in", description: "You need to be logged in to save properties.", variant: "destructive" });
+      return;
+    }
+    toggleSaveMutation.mutate();
+  };
 
   return (
     <Card 
@@ -30,6 +64,18 @@ export function PropertyCard({ property, onClick }: PropertyCardProps) {
         )}
 
         <div className="absolute top-3 right-3 flex gap-2">
+          {user && (
+            <Button
+              size="icon"
+              variant="secondary"
+              className={`h-8 w-8 shadow-lg transition-colors ${savedStatus?.saved ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-red-500'}`}
+              onClick={handleSaveClick}
+              disabled={toggleSaveMutation.isPending}
+              data-testid={`button-save-${property.id}`}
+            >
+              <Heart className={`h-4 w-4 ${savedStatus?.saved ? 'fill-current' : ''}`} />
+            </Button>
+          )}
           {property.verified && (
             <div className="bg-background/90 backdrop-blur px-2 py-1 rounded-md flex items-center gap-1 text-xs font-medium">
               <ShieldCheck className="h-3 w-3 text-primary" />
