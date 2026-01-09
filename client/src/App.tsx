@@ -51,6 +51,7 @@ function Router() {
           <Route path="/property/:id" component={PropertyDetail} />
           <Route path="/user/:userId" component={UserProfile} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/saved" component={Dashboard} />
           <Route path="/list-property" component={ListProperty} />
           <Route path="/edit-property/:id" component={EditProperty} />
           <Route path="/chat/:propertyId" component={ChatPage} />

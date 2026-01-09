@@ -137,7 +137,6 @@ export class MemStorage implements IStorage {
       description: insertProperty.description,
       propertyType: insertProperty.propertyType,
       price: insertProperty.price,
-      deposit: insertProperty.deposit || null,
       bedrooms: insertProperty.bedrooms,
       bathrooms: insertProperty.bathrooms,
       sqft: insertProperty.sqft || null,

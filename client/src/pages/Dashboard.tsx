@@ -58,8 +58,23 @@ export default function Dashboard() {
     enabled: !isPropertyOwner,
   });
 
+  const { data: savedProperties, isLoading: loadingSaved } = useQuery<Property[]>({
+    queryKey: ["/api/saved-properties"],
+    enabled: !isPropertyOwner && !!user,
+  });
+
   const { data: appointments, isLoading: loadingAppointments } = useQuery<Appointment[]>({
     queryKey: isPropertyOwner ? ["/api/appointments/owner", user?.id] : ["/api/appointments", user?.id],
+    enabled: !!user,
+  });
+
+  const { data: chats, isLoading: loadingChats } = useQuery<Chat[]>({
+    queryKey: isPropertyOwner ? ["/api/chats/owner", user?.id] : ["/api/chats/tenant", user?.id],
+    enabled: !!user,
+  });
+
+  const { data: chatUsers } = useQuery<Record<string, User>>({
+    queryKey: ["/api/chats/users"],
     enabled: !!user,
   });
 

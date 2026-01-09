@@ -60,9 +60,7 @@ export class DatabaseStorage implements IStorage {
       
       conditions.push(eq(properties.available, true));
       
-      query = query.where(and(...conditions));
-      
-      const result = await query;
+      const result = await db.select().from(properties).where(and(...conditions));
       return result || [];
     } catch (error) {
       console.error("Database error in getProperties:", error);

@@ -67,7 +67,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setLocation("/dashboard")}
+              onClick={() => setLocation("/saved")}
               data-testid="button-saved-properties"
               aria-label="Saved properties"
             >
