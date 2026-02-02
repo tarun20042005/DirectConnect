@@ -9,13 +9,15 @@ import {
   users, properties, chats, messages, appointments, reviews,
   otpCodes, savedProperties
 } from "@shared/schema";
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { eq, and, gte, inArray } from "drizzle-orm";
 import type { IStorage } from "./storage";
 
-const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL!,
+});
+const db = drizzle(pool);
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -90,7 +92,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProperty(id: string): Promise<boolean> {
     const result = await db.delete(properties).where(eq(properties.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async incrementPropertyViews(id: string): Promise<void> {
@@ -222,6 +224,6 @@ export class DatabaseStorage implements IStorage {
       .update(otpCodes)
       .set({ verified: true })
       .where(and(eq(otpCodes.userId, userId), eq(otpCodes.code, code)));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 }
