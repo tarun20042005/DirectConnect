@@ -201,23 +201,43 @@ export default function ChatPage() {
               ) : (
                 messages.map((msg, index) => {
                   const isOwn = msg.senderId === user.id;
+                  const showAvatar = !isOwn && (index === 0 || messages[index - 1].senderId !== msg.senderId);
+                  
                   return (
                     <div
-                      key={index}
-                      className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                      data-testid={`message-${index}`}
+                      key={msg.id || index}
+                      className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} mb-2`}
                     >
-                      <div
-                        className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                          isOwn
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        <p className="text-sm">{msg.content}</p>
-                        <p className={`text-xs mt-1 ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                          {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                      <div className={`flex items-end gap-2 max-w-[80%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                        {!isOwn && (
+                          <div className="w-8 flex-shrink-0">
+                            {showAvatar && (
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={owner?.avatarUrl || undefined} />
+                                <AvatarFallback className="text-[10px]">{ownerInitials}</AvatarFallback>
+                              </Avatar>
+                            )}
+                          </div>
+                        )}
+                        <div
+                          className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                            isOwn
+                              ? 'bg-primary text-primary-foreground rounded-tr-none'
+                              : 'bg-card border text-card-foreground rounded-tl-none'
+                          }`}
+                        >
+                          <p className="text-sm leading-relaxed">{msg.content}</p>
+                          <div className={`flex items-center justify-end gap-1 mt-1 opacity-70`}>
+                            <p className="text-[10px]">
+                              {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            {isOwn && (
+                              <span className="text-[10px]">
+                                {msg.read ? "Read" : "Sent"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );

@@ -52,6 +52,8 @@ export const messages = pgTable("messages", {
   chatId: varchar("chat_id").notNull(),
   senderId: varchar("sender_id").notNull(),
   content: text("content").notNull(),
+  read: boolean("read").default(false),
+  type: text("type").default("text"), // text, system, property_link
   createdAt: timestamp("created_at").defaultNow(),
 });
 

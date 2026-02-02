@@ -567,6 +567,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             chatId: chat.id,
             senderId: currentUserId,
             content: message.content,
+            read: false,
+            type: message.msgType || "text",
           });
 
           const roomId = `${chat.propertyId}-${chat.tenantId}`;
