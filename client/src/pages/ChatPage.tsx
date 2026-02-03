@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Send, ArrowLeft, AlertCircle, Calendar, CheckCircle, Shield } from "lucide-react";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import type { Property, User, Message } from "@shared/schema";
+import type { Property, User, Message, Chat } from "@shared/schema";
 
 export default function ChatPage() {
   const { propertyId } = useParams();
@@ -19,18 +19,12 @@ export default function ChatPage() {
   const user = getAuthUser();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chatId, setChatId] = useState<string | null>(null);
+  const [chatId, setChatId] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('chatId');
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
-
-  // Extract chatId from URL query params for owners
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlChatId = params.get('chatId');
-    if (urlChatId) {
-      setChatId(urlChatId);
-    }
-  }, []);
 
   if (!user) {
     setLocation("/auth");
@@ -41,32 +35,52 @@ export default function ChatPage() {
     queryKey: ["/api/properties", propertyId],
   });
 
-  const { data: owner } = useQuery<User>({
-    queryKey: ["/api/users", property?.ownerId],
-    enabled: !!property?.ownerId,
+  const { data: chatDetails } = useQuery<Chat>({
+    queryKey: ["/api/chats", chatId],
+    enabled: !!chatId,
   });
+
+  const otherUserId = isOwner(user) ? chatDetails?.tenantId : property?.ownerId;
+
+  const { data: otherUser } = useQuery<User>({
+    queryKey: ["/api/users", otherUserId],
+    enabled: !!otherUserId,
+  });
+
+  const { data: messagesHistory } = useQuery<Message[]>({
+    queryKey: ["/api/messages", chatId],
+    enabled: !!chatId,
+  });
+
+  useEffect(() => {
+    if (messagesHistory) {
+      setMessages(messagesHistory);
+    }
+  }, [messagesHistory]);
 
   useEffect(() => {
     if (!propertyId || !user.token) return;
     
+    // For owners, wait until chatId is available from URL or elsewhere
+    if (isOwner(user) && !chatId) return;
+
     // Construct WebSocket URL using the same protocol and host as current page
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host; // This includes port if present
+    const host = window.location.host; 
     const wsUrl = `${protocol}//${host}/ws`;
     
-    // Safety check: ensure we have a valid URL
     if (!wsUrl || wsUrl.includes("undefined")) {
       console.error("Invalid WebSocket URL:", wsUrl);
       return;
     }
     
-    console.log("Connecting to WebSocket:", wsUrl);
+    console.log(`Connecting to WebSocket for ${user.role}:`, wsUrl);
     
     try {
       const socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {
-        console.log("WebSocket connected");
+        console.log("WebSocket connected, joining room...");
         socket.send(JSON.stringify({ 
           type: "join", 
           propertyId, 
@@ -76,28 +90,26 @@ export default function ChatPage() {
         }));
       };
 
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("Received WebSocket message:", data);
-        if (data.type === "message") {
-          setMessages((prev) => {
-            // Prevent duplicate messages in the UI
-            if (prev.some(m => m.id === data.message.id)) return prev;
-            return [...prev, data.message];
-          });
-        } else if (data.type === "history") {
-          setMessages(data.messages || []);
-          if (data.chatId && !chatId) {
-            setChatId(data.chatId);
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "message") {
+            setMessages((prev) => {
+              if (prev.some(m => m.id === data.message.id)) return prev;
+              return [...prev, data.message];
+            });
+          } else if (data.type === "history") {
+            setMessages(data.messages || []);
+            if (data.chatId && !chatId) {
+              setChatId(data.chatId);
+            }
+          } else if (data.type === "error") {
+            toast({ title: "Chat error", description: data.message, variant: "destructive" });
           }
-        } else if (data.type === "error") {
-          toast({ title: "Chat error", description: data.message, variant: "destructive" });
+        } catch (err) {
+          console.error("Error parsing WebSocket message:", err);
         }
-      } catch (err) {
-        console.error("Error parsing WebSocket message:", err);
-      }
-    };
+      };
 
       socket.onerror = (error) => {
         console.error("WebSocket error:", error);
@@ -113,7 +125,7 @@ export default function ChatPage() {
       console.error("WebSocket setup error:", error);
       toast({ title: "Connection error", description: "Failed to setup WebSocket", variant: "destructive" });
     }
-  }, [propertyId, user.id, user.token]);
+  }, [propertyId, user.id, user.token, user.role, chatId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -127,20 +139,19 @@ export default function ChatPage() {
 
     const newMessage = {
       type: "message",
-      chatId, // Can be null for tenants, server will handle it
+      chatId, 
       content: message.trim(),
     };
 
-    console.log("Sending message:", newMessage);
     wsRef.current.send(JSON.stringify(newMessage));
     setMessage("");
   };
 
-  const ownerInitials = owner?.fullName
+  const otherInitials = otherUser?.fullName
     ?.split(" ")
     .map(n => n[0])
     .join("")
-    .toUpperCase() || "O";
+    .toUpperCase() || (isOwner(user) ? "T" : "O");
 
   // Check if owner is trying to access chat without chatId
   const isPropertyOwner = isOwner(user) && property?.ownerId === user.id;
@@ -183,14 +194,14 @@ export default function ChatPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Avatar className="h-12 w-12 border-2 border-primary/10">
-                  <AvatarImage src={owner?.avatarUrl || undefined} />
+                  <AvatarImage src={otherUser?.avatarUrl || undefined} />
                   <AvatarFallback className="bg-primary/5 text-primary font-bold">
-                    {ownerInitials}
+                    {otherInitials}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <CardTitle className="text-xl font-bold tracking-tight">
-                    {owner?.fullName || "Property Owner"}
+                    {otherUser?.fullName || (isOwner(user) ? "Tenant" : "Property Owner")}
                   </CardTitle>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
@@ -234,9 +245,9 @@ export default function ChatPage() {
                           <div className="w-8 flex-shrink-0">
                             {showAvatar && (
                               <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
-                                <AvatarImage src={owner?.avatarUrl || undefined} />
+                                <AvatarImage src={otherUser?.avatarUrl || undefined} />
                                 <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-medium">
-                                  {ownerInitials}
+                                  {otherInitials}
                                 </AvatarFallback>
                               </Avatar>
                             )}

@@ -424,6 +424,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/chats/:id", authenticateToken, async (req, res) => {
+    try {
+      const chat = await storage.getChat(req.params.id);
+      if (!chat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+      // Security check: only participants can see chat details
+      if (chat.tenantId !== req.userId && chat.ownerId !== req.userId) {
+        return res.status(403).json({ message: "Unauthorized access to chat" });
+      }
+      res.json(chat);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/messages/:chatId", authenticateToken, async (req, res) => {
+    try {
+      const messages = await storage.getMessages(req.params.chatId);
+      res.json(messages);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
 
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
