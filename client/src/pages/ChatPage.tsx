@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, ArrowLeft, AlertCircle } from "lucide-react";
+import { Send, ArrowLeft, AlertCircle, Calendar, CheckCircle, Shield } from "lucide-react";
 import { getAuthUser, isOwner } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import type { Property, User, Message } from "@shared/schema";
@@ -177,66 +177,99 @@ export default function ChatPage() {
         Back to Property
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 flex flex-col h-[600px]">
-          <CardHeader className="border-b">
-            <div className="flex items-center gap-3">
-              <Avatar>
-                <AvatarImage src={owner?.avatarUrl || undefined} />
-                <AvatarFallback>{ownerInitials}</AvatarFallback>
-              </Avatar>
-              <div>
-                <CardTitle className="text-lg">{owner?.fullName || "Property Owner"}</CardTitle>
-                <p className="text-sm text-muted-foreground">Usually responds within an hour</p>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <Card className="lg:col-span-3 flex flex-col h-[700px] border-none shadow-xl bg-card/50 backdrop-blur-sm overflow-hidden rounded-3xl">
+          <CardHeader className="border-b bg-background/80 backdrop-blur-md px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12 border-2 border-primary/10">
+                  <AvatarImage src={owner?.avatarUrl || undefined} />
+                  <AvatarFallback className="bg-primary/5 text-primary font-bold">
+                    {ownerInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-xl font-bold tracking-tight">
+                    {owner?.fullName || "Property Owner"}
+                  </CardTitle>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                    <p className="text-xs font-medium text-muted-foreground">Active now</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="icon" className="rounded-full h-10 w-10 hover:bg-primary/5">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                </Button>
               </div>
             </div>
           </CardHeader>
 
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 px-6 py-4" ref={scrollRef}>
+            <div className="space-y-6 pb-4">
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                  <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+                <div className="flex flex-col items-center justify-center h-[500px] text-center">
+                  <div className="bg-muted/30 p-8 rounded-full mb-4">
+                    <Send className="h-10 w-10 text-muted-foreground/40" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">Start your journey</h3>
+                  <p className="text-muted-foreground max-w-[240px]">
+                    Message the owner to inquire about this beautiful property.
+                  </p>
                 </div>
               ) : (
                 messages.map((msg, index) => {
                   const isOwn = msg.senderId === user.id;
                   const showAvatar = !isOwn && (index === 0 || messages[index - 1].senderId !== msg.senderId);
+                  const isLastInSequence = index === messages.length - 1 || messages[index + 1].senderId !== msg.senderId;
                   
                   return (
                     <div
                       key={msg.id || index}
-                      className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} mb-2`}
+                      className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                     >
-                      <div className={`flex items-end gap-2 max-w-[80%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                      <div className={`flex items-end gap-3 max-w-[85%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
                         {!isOwn && (
                           <div className="w-8 flex-shrink-0">
                             {showAvatar && (
-                              <Avatar className="h-8 w-8">
+                              <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
                                 <AvatarImage src={owner?.avatarUrl || undefined} />
-                                <AvatarFallback className="text-[10px]">{ownerInitials}</AvatarFallback>
+                                <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-medium">
+                                  {ownerInitials}
+                                </AvatarFallback>
                               </Avatar>
                             )}
                           </div>
                         )}
-                        <div
-                          className={`rounded-2xl px-4 py-2.5 shadow-sm ${
-                            isOwn
-                              ? 'bg-primary text-primary-foreground rounded-tr-none'
-                              : 'bg-card border text-card-foreground rounded-tl-none'
-                          }`}
-                        >
-                          <p className="text-sm leading-relaxed">{msg.content}</p>
-                          <div className={`flex items-center justify-end gap-1 mt-1 opacity-70`}>
-                            <p className="text-[10px]">
-                              {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                            {isOwn && (
-                              <span className="text-[10px]">
-                                {msg.read ? "Read" : "Sent"}
-                              </span>
-                            )}
+                        <div className="flex flex-col gap-1">
+                          <div
+                            className={`relative px-4 py-3 shadow-md transition-all duration-200 ${
+                              isOwn
+                                ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-2xl rounded-tr-sm'
+                                : 'bg-background border border-border/50 text-card-foreground rounded-2xl rounded-tl-sm'
+                            }`}
+                          >
+                            <p className="text-sm leading-relaxed font-medium">{msg.content}</p>
                           </div>
+                          {isLastInSequence && (
+                            <div className={`flex items-center gap-1.5 mt-1 px-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                              <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                                {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                              {isOwn && (
+                                <div className="flex items-center gap-1">
+                                  {msg.read ? (
+                                    <span className="text-[10px] font-bold text-primary flex items-center gap-0.5">
+                                      <CheckCircle className="h-3 w-3" /> Seen
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-medium text-muted-foreground/40 italic">Delivered</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -246,54 +279,99 @@ export default function ChatPage() {
             </div>
           </ScrollArea>
 
-          <form onSubmit={handleSendMessage} className="border-t p-4">
-            <div className="flex gap-2">
+          <div className="p-6 pt-2 bg-gradient-to-t from-background to-transparent">
+            <form 
+              onSubmit={handleSendMessage} 
+              className="flex items-center gap-3 bg-background border-2 border-muted focus-within:border-primary/30 p-2 pl-5 rounded-2xl shadow-lg transition-all"
+            >
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message..."
+                placeholder="Write a message..."
+                className="flex-1 border-none bg-transparent focus-visible:ring-0 text-base py-6 shadow-none"
                 data-testid="input-message"
               />
-              <Button type="submit" disabled={!message.trim()} data-testid="button-send-message">
-                <Send className="h-4 w-4" />
+              <Button 
+                type="submit" 
+                disabled={!message.trim()} 
+                size="icon" 
+                className="h-12 w-12 rounded-xl shadow-lg shadow-primary/20 hover-elevate transition-transform active:scale-95 shrink-0"
+                data-testid="button-send-message"
+              >
+                <Send className="h-5 w-5" />
               </Button>
-            </div>
-          </form>
+            </form>
+          </div>
         </Card>
 
         {property && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Property Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {property.images && property.images[0] && (
-                <img
-                  src={property.images[0]}
-                  alt={property.title}
-                  className="w-full aspect-video object-cover rounded-lg"
-                />
-              )}
-              <div>
-                <h3 className="font-semibold">{property.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {property.address}, {property.city}, {property.state}
-                </p>
+          <div className="space-y-6">
+            <Card className="border-none shadow-lg overflow-hidden rounded-3xl">
+              <div className="relative aspect-[4/3]">
+                {property.images && property.images[0] && (
+                  <img
+                    src={property.images[0]}
+                    alt={property.title}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="text-white font-bold leading-tight">{property.title}</h3>
+                </div>
               </div>
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Monthly Rent</span>
-                <span className="font-semibold text-lg">₹{property.price}</span>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => setLocation(`/schedule/${propertyId}`)}
-                data-testid="button-schedule-viewing"
-              >
-                Schedule Viewing
-              </Button>
-            </CardContent>
-          </Card>
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">
+                    {property.propertyType}
+                  </div>
+                  <span>•</span>
+                  <span>{property.city}</span>
+                </div>
+                <Separator className="opacity-50" />
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Rent</p>
+                    <p className="font-black text-xl text-primary">₹{property.price}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="rounded-xl font-bold px-4"
+                    onClick={() => setLocation(`/property/${propertyId}`)}
+                  >
+                    Details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-lg rounded-3xl overflow-hidden bg-primary/5">
+              <CardContent className="p-5 space-y-4">
+                <h4 className="font-bold text-sm uppercase tracking-widest text-primary/70">Next Steps</h4>
+                <div className="space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 rounded-xl border-primary/20 hover:bg-primary/10 transition-colors"
+                    onClick={() => setLocation(`/schedule/${propertyId}`)}
+                  >
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="font-bold">Book Visit</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 rounded-xl border-primary/20 hover:bg-primary/10 transition-colors"
+                  >
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Shield className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="font-bold">Request Docs</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
