@@ -88,14 +88,7 @@ export default async function runApp(
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  const listenOptions: Record<string, unknown> = {
-    port,
-    host: "0.0.0.0",
-  };
-  if (process.platform !== "win32") {
-    listenOptions.reusePort = true;
-  }
-  server.listen(listenOptions, () => {
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });
 }
